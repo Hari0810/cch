@@ -27,6 +27,27 @@ function minutesLeft(expiresAt: string): number {
   );
 }
 
+/**
+ * The wall-clock time of the access, in the reader's own timezone.
+ *
+ * NOT `iso.slice(11, 16)`. The decision card slices, and is right to: it echoes
+ * the request string back byte-for-byte with its original `+01:00`. These rows
+ * come from Postgres, which normalises `timestamptz` to UTC — so the same 23:40
+ * access arrives here as `22:40:00+00:00` and slicing printed **22:40 in the
+ * approver's inbox while the decision card next to it said 23:40**. Two panes,
+ * one access, an hour apart.
+ *
+ * Parsing the instant and formatting it locally is the correct fix rather than
+ * a patch: the stored value *is* an instant, and an approver should see it in
+ * their own time. It also happens to agree with the card on the demo machine.
+ */
+function localTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso.slice(11, 16);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 const STATUS_TONE: Record<PendingApproval["status"], string> = {
   pending: "border-destructive/30 bg-destructive/10 text-destructive",
   approved: "border-success/30 bg-success/10 text-success",
@@ -76,7 +97,7 @@ function Row({
         </p>
         <p className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground tabular-nums">
           <Clock className="size-3" />
-          {item.occurred_at.slice(11, 16)} · {item.resource_sensitivity}
+          {localTime(item.occurred_at)} · {item.resource_sensitivity}
         </p>
       </div>
 
