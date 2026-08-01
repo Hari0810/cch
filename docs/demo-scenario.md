@@ -314,7 +314,13 @@ Thresholds live in one exported object — [brief-extended.md](brief-extended.md
 - **Expiry:** 15 minutes, on real wall-clock — the sole place `now()` is correct.
 - **At minute 16: escalate to Julia**, not deny. "Suspend, don't deny" and a hard
   expiry are otherwise in tension.
-- **Immutable audit event** on every decision: reasons, score, approver, outcome.
+- **An audit event on every decision:** reasons, score, approver, outcome. Not
+  *immutable* — an earlier draft said so and it was false. `access_event` rows
+  are ordinary Postgres rows with no append-only constraint and no hash chain,
+  and the engine's service-role key bypasses RLS. The release of an approved
+  access is written as a separate later row rather than a rewrite of the
+  original, which is a discipline rather than a guarantee. See
+  [threat-model.md](threat-model.md) §4.
 
 ---
 

@@ -38,7 +38,7 @@ when the clock might beat us.
 | **M — Modal baselining** | ✅ deployed | 12:40 | Sponsor depth; baseline as computed fact |
 | **3a — OAuth identity** | ✅ free | 12:55 | Came back — the contract already carried it |
 | **2 — Approval loop** | ✅ done | 12:55 | Suspend-not-deny, audit, human-in-loop, Supabase depth |
-| **3b — Access graph** | 🔄 building | ~14:15 | Reopened 13:10 — see below |
+| **3b — Access graph** | 🔄 building | ~13:45 | Reopened 12:52 — see below |
 
 ### Verified at 12:55 — `scripts/verify-demo.ts`, all three green
 
@@ -81,7 +81,7 @@ workstreams built it anyway. **Scenario C is canonically Provenance AI
 delegating Alice** — in the docs, the seed, the UI and `verify-demo.ts`. Plain
 Alice remains available through the free-form builder as a fallback.
 
-**3b was reopened at 13:10**, after the earlier cut conflated two different
+**3b was reopened at 12:52**, after the earlier cut conflated two different
 things. Building *graph analysis* — traversal that feeds the score — was cut for
 good reasons and stays cut. But *drawing* the access graph turned out to be a
 re-layout of `permission_path`, an array every response already carries: no

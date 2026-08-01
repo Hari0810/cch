@@ -189,7 +189,15 @@ So the top action is **pause and request approval**, never hard deny. Consequenc
 
 - A false positive costs a colleague ninety seconds, not a lost afternoon.
 - The user always sees the reason, in plain English.
-- Every decision is contestable, and the contest is logged.
+- A decision can be contested to the named approver, and the approval row
+  records who decided, when, and with what justification. What survives a
+  contest is the **system-derived** half of the record — project membership,
+  open tasks, the resolved permission path — because those are joins anyone can
+  re-run against the same rows. The model's prose summarises them and is not
+  evidence in its own right. Caveat, stated so nobody discovers it later: today
+  `access_event` stores the decision, score and prose but *not* the context
+  snapshot, so a contest raised weeks later re-runs the join against rows that
+  may have moved. See [threat-model.md](threat-model.md) §4.
 - The approver is the **project/data owner** — Eva owns Project Nova — not a
   security queue. (Daniel owns the file itself; ownership of the *project* is
   what confers authority to release access to it.)
@@ -203,10 +211,21 @@ This system reads context about employees. That is a real concern and pretending
 otherwise is worse than addressing it:
 
 - It evaluates **access events**, not people. No productivity scoring, no ranking.
-- Context is read **at decision time** for that decision; it is not a dossier.
+- Memberships, open tasks and prior accesses are read **at decision time** for
+  that decision and not retained. One standing per-person record does exist and
+  calling it nothing would be false: `behaviour_profile` holds typical hours,
+  project mix, category mix, a files-per-hour percentile and the list of
+  projects never touched. It is derived from access history, holds no content —
+  no file contents, no message text — and carries no productivity measure. The
+  claim we can defend is that what is retained is **small, derived and
+  access-shaped**, not that nothing is retained.
 - Decisions are shown to the user, not just to security.
-- Everything is auditable in both directions — the employee can see why they were
-  stopped, and the reviewer can see who approved what.
+- Both sides can read the trail — the employee can see why they were stopped,
+  and the reviewer can see who approved what. **Audit rows are ordinary Postgres
+  rows**, not cryptographically immutable: no append-only constraint, no hash
+  chain, and the engine's service-role key bypasses RLS. What the design does
+  buy is that a released access is written as a separate, later row rather than
+  as a rewrite of the original. That is a discipline, not a guarantee.
 
 ## 6. The OAuth angle (keep it small)
 
@@ -268,6 +287,7 @@ Named so nobody quietly starts building them:
 | [plan.md](plan.md) | **The live build plan** — rungs, time budget, cut line. |
 | [demo-scenario.md](demo-scenario.md) | **Source of truth for the seed** — cast, permissions, scenarios. |
 | [brief.md](brief.md) | The original one-page pitch. |
+| [threat-model.md](threat-model.md) | **What it defends against, what it does not, and the attacks against Cordyceps itself** — plus failure behaviour and the first-deployment wedge. |
 | [judging-criteria.md](judging-criteria.md) | Seven criteria, the judges, the demo beat map. |
 | [cursor-hackathon.md](cursor-hackathon.md) | Schedule, partners, submission mechanics. |
 | [vercel.md](vercel.md) | The April 2026 incident, with accuracy notes. |

@@ -1,12 +1,12 @@
 # Rung 3b — the access graph
 
-**Conceptual scaffold, written 2026-08-01 13:05.** Not a commitment to build.
+**Conceptual scaffold, written 2026-08-01 12:50.** Not a commitment to build.
 This document exists to separate three things that were being argued as one: the
 *picture*, the *query behind it*, and *graph analysis feeding the score*. They
 have wildly different costs and only the third one was ever cut for good reason.
 
 Every number and edge below is read from the live seed, not invented. Verified
-against the database at 13:03.
+against the database at 12:48.
 
 ---
 
