@@ -1,7 +1,21 @@
 # Employee surface + demo enforcement — proposal for review
 
-**Written 2026-08-01 13:22 BST. Not decided — this is a costed recommendation
-for the main agent to accept, trim or reject.** Code freeze 15:45.
+**Written 2026-08-01 13:22 BST as an undecided proposal. Resolved 13:35 exactly
+as recommended: the enforcement half shipped, the workspace shell did not.**
+Code freeze 15:45.
+
+> **What shipped**, in `src/lib/content.ts`, `src/app/api/content/route.ts` and
+> `src/components/file-preview.tsx`: a preview trigger on the decision card
+> calling `POST /api/content`, which returns **200 with no `content` key** when
+> the band is `STEP_UP`, `REQUIRE_APPROVAL` or `DENY`. An approver's release is
+> single-use, enforced by the capability row's primary key — no `consumed_at`
+> column, no schema change. Two corrections the proposal below did not have:
+> `ALLOW_AND_FLAG` **releases** (the release row is itself stamped
+> `ALLOW_AND_FLAG`, so withholding on "anything not `ALLOW`" would withhold what
+> the approval just granted), and the release lookup takes an explicit
+> `poll: true` flag so a 2-second poll cannot fall through to the model. The
+> dialog is `modal={false}` — Radix's default overlay swallowed the click on
+> Approve. The rest of this file is the original costing, kept as the reasoning.
 
 The proposal on the table: replace the three-button dashboard with an
 employee-facing file workspace, where the engine's decision manifests as a file

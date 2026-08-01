@@ -1,8 +1,9 @@
 # Build plan — 1 August, code freeze 15:45
 
-> **Updated 12:00.** The contract is written and three workstreams are running
-> in parallel against it. Revised from the 11:25 version: Modal is in, the OAuth
-> rung is cut to pay for it, and Runware — not Anthropic — is the model provider.
+> **Updated 14:05.** Every rung has landed. Two unplanned pieces went in after
+> the ladder was cleared — server-side enforcement and the Organisation tab —
+> both recorded below. The 12:00 body is otherwise unchanged: the contract is
+> written, Modal is in, and Runware — not Anthropic — is the model provider.
 
 ## Credentials — verified, not assumed
 
@@ -38,7 +39,9 @@ when the clock might beat us.
 | **M — Modal baselining** | ✅ deployed | 12:40 | Sponsor depth; baseline as computed fact |
 | **3a — OAuth identity** | ✅ free | 12:55 | Came back — the contract already carried it |
 | **2 — Approval loop** | ✅ done | 12:55 | Suspend-not-deny, audit, human-in-loop, Supabase depth |
-| **3b — Access graph** | 🔄 building | ~13:45 | Reopened 12:52 — see below |
+| **3b — Access graph** | ✅ done | 13:45 | Reopened 12:52 — see below |
+| **E — Server-side enforcement** | ✅ done | 13:35 | The decision is enforced, not advisory |
+| **O — Organisation tab** | ✅ done | 13:58 | Where a sceptic checks the rows are real |
 
 ### Verified at 13:20 — `scripts/verify-demo.ts`, all three green
 
@@ -105,6 +108,39 @@ but outside the group. The one never-reviewed grant reaches **three** restricted
 files and the demo only ever opens one. None of that was visible in a horizontal
 chain, and all of it was already in the database.
 
+## Two unplanned rungs, 13:20 – 13:58
+
+Neither was on the ladder. Both were taken because the ladder had cleared and
+each closes a question a judge asks out loud.
+
+**E — server-side enforcement** ([workspace-enforcement.md](workspace-enforcement.md)).
+Until 13:35 the verdict was advisory: the card said `REQUIRE_APPROVAL` and
+nothing stopped the read. `POST /api/content` now resolves the same decision and
+returns **200 with no `content` key** when the band is `STEP_UP`,
+`REQUIRE_APPROVAL` or `DENY` — the bytes never leave the server, rather than
+being sent and hidden in the client. An approver's release is a single-use
+capability, and single use falls out of the capability row's primary key: no
+`consumed_at` column, no schema change. `ALLOW_AND_FLAG` releases the file,
+because the release row is itself stamped `ALLOW_AND_FLAG` and a
+"withhold on anything that isn't `ALLOW`" rule would withhold the bytes the
+approval just released.
+
+**O — the Organisation tab** (`src/components/organisation/`, `GET /api/org`).
+Five read-only sections: mission and projects, people and their project
+assignments, groups and grants, third-party apps, resources. It replaced the dead
+"Employees" placeholder. This is a **deliberate relaxation of ground rule 7**,
+recorded in [AGENTS.md](../AGENTS.md) §6: the rule exists to stop hours going
+into CRUD screens that score nothing, and a read-only inspection surface is a
+different thing — it is where a sceptic checks the decision fell out of real rows
+rather than three if-statements. It **displays; it never decides.** No scores, no
+verdicts, no ranking of people. Extend it read-only or not at all.
+
+The row that states the whole product in one line lives in its grants section:
+
+> `finance/` · restricted · belongs to project **Nova** · **In this group, not in
+> Nova: Alice Morgan** · granted 1 Feb 2026 for *"Atlas Q1 cloud cost
+> attribution"* · **Never reviewed**
+
 ## Ground rules — decided, do not revisit
 
 1. **`occurred_at` is explicit.** The request carries it; `now()` appears
@@ -128,8 +164,10 @@ chain, and all of it was already in the database.
    of the join or the whole product is theatre.
 6. **SQL goes into the Supabase SQL editor**, not `supabase init` + migrations.
    Save the tooling ceremony for a project with a week in it.
-7. **No ERP surface.** No employee list, no resource catalogue, no dashboard
-   stats. Hours spent, nothing scored — brief-extended §8.
+7. **No ERP surface — one exception, taken 13:45.** No CRUD, no editing, no
+   dashboard stats, no productivity metrics or rankings of people. Hours spent,
+   nothing scored — brief-extended §8. The read-only Organisation tab is the
+   exception and the reasoning is above; it displays and never decides.
 8. **All timestamps derive from one `SEED_ANCHOR`.** Re-seeding at any hour
    must produce a coherent world.
 
@@ -382,13 +420,20 @@ Restore it before anything else.
 Until then, scenario C runs as Alice directly. The A/N/C contrast carries the
 product argument; the OAuth reveal was topicality on top of it.
 
-## ~~Rung 3b — attack graph~~ — cut
+## ~~Rung 3b — attack graph~~ — cut, then reopened at 12:52 and shipped
 
-The real graph-analysis rung remains cut. Do not add graph traversal, change the
-decision contract, or put a graph on the rehearsed demo path. `@xyflow/react`
-stays installed for the eventual implementation.
+> **Historical from here down.** The section below is the 12:00 plan for a static
+> placeholder and is kept because its constraints still hold. What actually
+> shipped is live: `GET /api/graph?event=<id>` derives the picture from the same
+> `resolvePermission` / `walkResourceChain` the engine uses, so the graph cannot
+> disagree with the decision, and `src/components/attack-graph/` renders it on the
+> Attack tab. The one rule that survived unchanged: **the graph explains; it does
+> not detect.** Delete it and every decision is byte-identical.
 
-### Static attack-path placeholder — planned, isolated work only
+The real graph-*analysis* rung remains cut. Do not add graph traversal that feeds
+a score, and do not change the decision contract to make the picture prettier.
+
+### Static attack-path placeholder — superseded, kept for its constraints
 
 A presentation-only scaffold may be built without reopening rung 3b. Its job is
 to de-risk the visual language and leave a clean integration seam; it must not

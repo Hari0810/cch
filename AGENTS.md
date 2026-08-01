@@ -73,9 +73,18 @@ to rediscover.
 5. **All timestamps derive from one `SEED_ANCHOR`.** No hardcoded dates.
    Re-seeding at any hour must produce a coherent world.
 
-6. **No ERP surface.** No employee list, no resource catalogue, no dashboard
-   stats. Hours spent, nothing scored. The task board is the *demo substrate*,
-   not the product — in reality this reads from Jira, Linear, GitHub, Slack, SAP.
+6. **No ERP surface — with one deliberate exception.** No CRUD, no editing, no
+   dashboard stats, no productivity metrics or rankings of people. The task board
+   is the *demo substrate*, not the product — in reality this reads from Jira,
+   Linear, GitHub, Slack, SAP.
+
+   **Relaxed 13:45 for the Organisation tab** (`src/components/organisation/`,
+   `GET /api/org`). The rule existed to stop hours going into CRUD screens that
+   score nothing. A *read-only inspection* surface is a different thing: it is
+   where a sceptic checks that decisions fall out of real rows rather than three
+   if-statements, and the groups-and-grants table states the product's thesis in
+   a single row. It **displays; it never decides** — no scores, no verdicts, no
+   ranking. Extend it read-only or not at all.
 
 7. **Schema goes into the Supabase SQL editor**, not `supabase init` +
    migrations. Save the tooling ceremony for a project with a week in it.
@@ -119,7 +128,7 @@ Two constraints, both already commented in the file and both easy to break:
 | --- | --- |
 | [docs/handoff.md](docs/handoff.md) | **Start here if you are picking this up** — timestamped state, what is verified, what remains |
 | [docs/attack-graph.md](docs/attack-graph.md) | **Rung 3b scaffold** — the picture, the feasibility tiers, and what must never be implied |
-| [docs/workspace-enforcement.md](docs/workspace-enforcement.md) | **Proposal, undecided** — employee file surface and server-side withholding, costed against the 15:45 freeze |
+| [docs/workspace-enforcement.md](docs/workspace-enforcement.md) | **Shipped 13:35** — server-side withholding; the design behind `POST /api/content` |
 | [docs/plan.md](docs/plan.md) | **The live build plan** — rungs, time budget, cut line at 14:45 |
 | [docs/demo-scenario.md](docs/demo-scenario.md) | **Source of truth for the seed** — cast, permissions, resources, tasks, scenarios |
 | [docs/brief-extended.md](docs/brief-extended.md) | The product argued out in full — the gap, the pipeline, thresholds |

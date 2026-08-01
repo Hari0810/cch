@@ -45,8 +45,22 @@ granted. Cordyceps narrows access; it must never become a way to widen it.
 | 85–100 | `REQUIRE_APPROVAL` |
 
 **High risk suspends; it never denies.** Access is held pending the project
-owner's approval, with a 15-minute expiry. The failure mode is a delay with a
-named human attached, not a lockout.
+owner's approval, with a 15-minute expiry. At expiry it escalates up the org
+chart rather than refusing — a hard timeout would make the reviewer being at
+lunch into a security decision. The failure mode is a delay with a named human
+attached, not a lockout.
+
+### The decision is enforced, not advisory
+
+`POST /api/content` is the enforcement point. On `STEP_UP`, `REQUIRE_APPROVAL` or
+`DENY` it returns `200` **with no `content` key at all** — the bytes are never
+sent and then hidden client-side, so opening the network tab finds nothing. The
+withheld response is ~1.5 KB of explanation; the released one carries the file.
+
+Approval mints a **single-use** release scoped to one identity, one resource, one
+action. Redemption inserts a row whose primary key is derived from the release
+id, so a second attempt fails on duplicate key — single use falls out of the
+schema rather than out of a flag someone has to remember to check.
 
 ## The demo, in three clicks
 
@@ -91,6 +105,32 @@ And the permission chain carries its own provenance:
 > Readers → holds view on `finance/` · **granted 6 months ago for "Atlas Q1
 > cloud cost attribution" · never reviewed** → `finance/` contains
 > Acquisition Valuation.xlsx
+
+## Three screens
+
+**Dashboard** — the request, the decision, and the approver's inbox side by side.
+Both panes are visible at once deliberately: "suspend, don't deny" only reads as
+a design rather than an excuse when you can see the named human waiting.
+
+**Access graph** — the same decision re-laid-out, and the only view that can draw
+what *isn't* there. The `not a member` edge from Alice to Project Nova is
+rendered as an absence: *the permission reaches it; the purpose does not.* It
+also shows the blast radius — the demo opens one file, and that single
+never-reviewed grant reaches **three** restricted documents.
+
+**Organisation** — a read-only system of record: authorised third-party
+software, projects, people, groups-and-grants, resources. It exists to answer
+*"is this a real dataset or three if-statements?"*, so it displays and never
+decides. Every grant shows `group_membership` minus `project_membership` — on
+every row, not only the damning one — and the finance row then states the whole
+thesis by itself:
+
+> `finance/` · restricted · belongs to project **Nova** · **In this group, not in
+> Nova: Alice Morgan** · granted 1 Feb 2026 for *"Atlas Q1 cloud cost
+> attribution"* · **Never reviewed**
+
+Group membership and project membership are different tables. That is why a
+grant outlives the work it was issued for.
 
 ## Running it
 

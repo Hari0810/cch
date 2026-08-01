@@ -45,3 +45,6 @@ __pycache__/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# verification screenshots — written to the repo root by Playwright runs
+/*.png
