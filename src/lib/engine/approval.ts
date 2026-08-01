@@ -235,6 +235,7 @@ export async function listApprovals(limit = 12): Promise<PendingApproval[]> {
         created_at: row.created_at,
         expires_at: row.expires_at,
         status: row.status,
+        approver_id: row.approver_id,
         approver_name: employees.get(row.approver_id)?.name ?? row.approver_id,
       } satisfies PendingApproval,
     ];

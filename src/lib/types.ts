@@ -317,5 +317,6 @@ export interface PendingApproval {
   expires_at: string;
   status: "pending" | "approved" | "rejected" | "expired";
   /** Whose desk it is on. Changes when an expired request escalates. */
+  approver_id: string;
   approver_name: string;
 }
