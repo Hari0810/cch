@@ -69,10 +69,17 @@ current horizontal chain:
 permission path exists; the purpose path does not. A chain can only show the path
 that *is* there.
 
-**The blast radius.** The demo touches one file. The grant reaches four
-restricted objects — the folder and three documents. "The file you just watched
-leave was one of three" is a materially stronger sentence than anything said on
-stage so far, and it is a fact, not a projection.
+**The blast radius.** The demo touches one file. The grant reaches **three**
+restricted documents. "The file you just watched leave was one of three" is a
+materially stronger sentence than anything said on stage so far, and it is a
+fact, not a projection.
+
+> Say **three**, not four. `blast_radius.reaches` returns descendants of the
+> granted folder, so the UI shows 3. The folder itself is also classified
+> restricted, which makes "four restricted objects" defensible on paper and
+> wrong on stage — narrating a number the screen contradicts is worse than the
+> smaller number. An earlier draft of this document said four; it was corrected
+> when the endpoint was verified.
 
 **The inversion.** Alice ∈ group, ∉ project. Farah ∈ project, ∉ group. Nova's own
 counsel is not in the group that can read Nova's finance folder, while an
