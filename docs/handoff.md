@@ -1,7 +1,13 @@
 # Handoff — Cordyceps
 
-**Written 2026-08-01 14:10 BST.** Code freeze 15:45, demo 16:35.
+**Written 2026-08-01 14:20 BST.** Code freeze 15:45, demo 16:35.
 Supersedes the 13:25 version of this file.
+
+> **14:20 — one thing is being built after this was written.** An employee-facing
+> file-manager mockup on **port 3001**, with the three demo scenarios as tabs
+> down its sidebar. It is additive and isolated: the three-button dashboard on
+> port 3000 is the submission and must never depend on it. If 15:15 arrives and
+> the mockup is not clean, drop it and demo what is already green. See §10.
 
 State of the world, not a plan. The plan is [plan.md](plan.md); the product
 argument is [brief-extended.md](brief-extended.md); the seeded world is
@@ -38,6 +44,13 @@ submission artefact, with about 45 minutes of genuine slack before them.
 Three screens, all live: **Dashboard** (request → decision → approver inbox, all
 visible at once), **Attack** (the same decision re-laid-out as a graph), and
 **Organisation** (read-only system of record).
+
+**14:15 — Projects became master–detail.** Three cards side by side read as
+"here are our three projects" and get skimmed; one at a time, with the others
+named down the left, the pane answers *what is Nova and who is on it* — which is
+the question scenario C turns on, since Alice is not on that list. The detail
+pane also lists the project's resources by filtering the payload the screen
+already has, so `finance/` and its three restricted files now read as **Nova's**.
 
 ---
 
@@ -300,7 +313,7 @@ Full list in [AGENTS.md](../AGENTS.md). The ones most easily undone by accident:
 | | |
 | --- | --- |
 | ~~13:25 – 14:00~~ | ~~graph UI, stale scores~~ — done, plus enforcement and the Organisation tab |
-| 14:10 – 14:55 | genuine slack. Spend it on an early rehearsal, not on new surface — the `access_event` schema gap needs a re-paste and buys nothing on stage |
+| 14:20 – 15:10 | the employee workspace mockup on port 3001 (§10). Hard stop at 15:10 whatever its state |
 | 14:55 – 15:15 | rehearsal ×2, out loud, on the real machine |
 | 15:15 – 15:45 | submission artefact, final push |
 | 15:45 | **freeze** |
@@ -308,3 +321,40 @@ Full list in [AGENTS.md](../AGENTS.md). The ones most easily undone by accident:
 
 Commit and push at every checkpoint. Everything through `823d24a` is on the
 remote; a green verifier that exists only on this laptop is not a submission.
+
+---
+
+## 10. The employee workspace — reopened 14:20
+
+[workspace-enforcement.md](workspace-enforcement.md) cut the `/workspace` route
+at 13:35 and built the enforcement without it. **Reopened at 14:20 by the
+user's decision**, with the reasoning that the employee's-eye view is how the
+concept reads to someone who does not already believe it: you browse `finance/`,
+you open a file, and the file does not open.
+
+What is being built: an online file manager at **`/workspace` served on port
+3001**, with the three demo scenarios as tabs down a sidebar — Alice at 10:15,
+Daniel at 23:20, Provenance AI delegating Alice at 23:40. Each tab puts you in
+that identity's seat, browsing real `resource` rows, and opening a file calls the
+real `POST /api/content`. Nothing about it is faked: the same engine, the same
+withhold set, the same single-use release.
+
+**The constraints that make this safe to add an hour before freeze:**
+
+- **It is on a different port and is not linked from the main app.** Port 3000
+  is the submission. If the workspace breaks, the demo does not.
+- **It adds no engine, contract or schema change.** It is a second client of an
+  endpoint that already exists and is already verified.
+- **The three-button dashboard stays the rehearsed path.** The workspace is the
+  opening image or the Q&A answer, not a replacement narrative. The 13:35
+  reasoning for that — spending the rehearsal slot on the first run-through of a
+  surface built at 14:40 — has not stopped being true.
+- **Hard stop 15:10.** If it is not clean by then, it does not ship.
+
+`next.config.ts` gained `distDir: process.env.NEXT_DIST_DIR ?? ".next"` so a
+second dev server can run on 3001 without two Next processes fighting over one
+build directory:
+
+```bash
+NEXT_DIST_DIR=.next-workspace pnpm exec next dev -p 3001
+```
