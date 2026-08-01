@@ -61,6 +61,8 @@ Also confirmed live, not assumed:
 | M | Modal behavioural baselining | ✅ done |
 | 3a | OAuth delegated identity (`acts_for`) | ✅ done |
 | 2 | Approval loop | ✅ done — verified end to end 12:55 |
+| 3b | Access graph — data layer (`GET /api/graph`) | ✅ done — verified 13:32 |
+| 3b | Access graph — UI | 🔄 building |
 | 3b | Graph analysis (stage 3) | cut — documented as future work |
 
 ---
@@ -179,8 +181,16 @@ this was flagged, not fixed.
   thresholds — 92 is comfortably inside `REQUIRE_APPROVAL`, but 8 and 12 have
   never been observed drifting and that has never been *measured*
 
-**Deferred by explicit decision:** `DATABASE_URL` + a `pnpm db:push` script to
-replace pasting `supabase/schema.sql` into the SQL editor by hand. Post-hackathon.
+**Deferred by explicit decision:**
+
+- `DATABASE_URL` + a `pnpm db:push` script to replace pasting
+  `supabase/schema.sql` into the SQL editor by hand. Post-hackathon.
+- **Overmind — dropped, 13:35.** Do not reopen without being asked. It needs
+  live AWS/GCP/Kubernetes read-only APIs and a Terraform plan to analyse;
+  Cordyceps is a seeded simulation of an organisation with no cloud
+  infrastructure to discover, so there is nothing genuine to integrate and
+  [judging-criteria.md](judging-criteria.md) is explicit that a faked version
+  costs more than the logo earns.
 
 ---
 
