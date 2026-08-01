@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { ApprovalInbox } from "@/components/approval-inbox";
+import { AccessGraphView } from "@/components/attack-graph/access-graph";
 import { DecisionCard } from "@/components/decision-card";
 import { RequestPanel } from "@/components/request-panel";
 import { cn } from "@/lib/utils";
@@ -127,6 +128,10 @@ export default function Home() {
             />
             <ApprovalInbox className="min-w-0" />
           </div>
+        ) : active === "Attack" ? (
+          /* The same decision, re-laid-out. Reads the decision state held here;
+             no engine call of its own. */
+          <AccessGraphView decision={decision} />
         ) : (
           <div className="flex flex-1 items-center justify-center p-8">
             <p className="text-sm text-muted-foreground">Coming soon</p>
