@@ -37,8 +37,8 @@ when the clock might beat us.
 | **1 — Contrast pair + demo mechanics** | ✅ done | 12:55 | Legitimate access untouched; not a sensitivity classifier |
 | **M — Modal baselining** | ✅ deployed | 12:40 | Sponsor depth; baseline as computed fact |
 | **3a — OAuth identity** | ✅ free | 12:55 | Came back — the contract already carried it |
-| **2 — Approval loop** | 75m | ~14:20 | Suspend-not-deny, audit, human-in-loop, Supabase depth |
-| ~~3b — Attack graph~~ | ~~45m~~ | ❌ cut | Overruns; the worst place to show something unrehearsed |
+| **2 — Approval loop** | ✅ done | 12:55 | Suspend-not-deny, audit, human-in-loop, Supabase depth |
+| **3b — Access graph** | 🔄 building | ~14:15 | Reopened 13:10 — see below |
 
 ### Verified at 12:55 — `scripts/verify-demo.ts`, all three green
 
@@ -81,8 +81,21 @@ workstreams built it anyway. **Scenario C is canonically Provenance AI
 delegating Alice** — in the docs, the seed, the UI and `verify-demo.ts`. Plain
 Alice remains available through the free-form builder as a fallback.
 
-**3b stays a sentence:** *"the attack path is where this goes next, and it's the
-reason the agent intervenes at all"* (judging-criteria §4.1).
+**3b was reopened at 13:10**, after the earlier cut conflated two different
+things. Building *graph analysis* — traversal that feeds the score — was cut for
+good reasons and stays cut. But *drawing* the access graph turned out to be a
+re-layout of `permission_path`, an array every response already carries: no
+engine change, no contract change, no new query. The tier breakdown, the
+feasibility line, and the rule that governs it (**the graph explains; it does not
+detect**) are in [attack-graph.md](attack-graph.md).
+
+The reopening was worth it for a reason the earlier analysis missed. Reading the
+seed back revealed the picture is stronger than the story we had been telling:
+`finance-data-readers` is {Daniel, Eva, Alice} while Nova's members are {Daniel,
+Eva, Farah}. Alice is in the group but off the project; Farah is on the project
+but outside the group. The one never-reviewed grant reaches **three** restricted
+files and the demo only ever opens one. None of that was visible in a horizontal
+chain, and all of it was already in the database.
 
 ## Ground rules — decided, do not revisit
 
