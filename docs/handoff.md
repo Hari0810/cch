@@ -13,9 +13,11 @@ touching code.
 
 ## 1. Where we are in one line
 
-The product works end to end and the demo's central contrast is verified. Rung 2
-(the approval loop) has a complete, typechecked backend and a written UI
-component that is **not yet mounted on the page**. Everything else is done.
+**Every rung that was going to ship has shipped and is verified against the live
+server.** What remains is prose, rehearsal and the submission artefact.
+
+*(Updated 12:58 — §4 previously said rung 2's UI was unmounted. It is mounted,
+and the whole loop is tested end to end.)*
 
 ---
 
@@ -58,7 +60,7 @@ Also confirmed live, not assumed:
 | 1 | Engine (policy → context → score → decide) + `/api/access` + dashboard | ✅ done |
 | M | Modal behavioural baselining | ✅ done |
 | 3a | OAuth delegated identity (`acts_for`) | ✅ done |
-| **2** | **Approval loop** | **backend done, UI written, not mounted** |
+| 2 | Approval loop | ✅ done — verified end to end 12:55 |
 | 3b | Graph analysis (stage 3) | cut — documented as future work |
 
 ---
@@ -113,34 +115,56 @@ that misses a tick arrives on the next one.
 
 `pnpm exec tsc --noEmit` is clean as of 12:43.
 
-### What remains (~15 min)
+### Verified end to end at 12:55
 
-1. Mount `<ApprovalInbox />` in [src/app/page.tsx](../src/app/page.tsx). The grid
-   is currently `[21rem_1fr]`; intended layout is `[21rem_1fr_20rem]` so the
-   requester's pane and the approver's desk are visible **at the same time** —
-   that simultaneity is the point of "suspend, don't deny".
-2. Replace `ReservedRow` in
-   [src/components/decision-card.tsx](../src/components/decision-card.tsx) with a
-   real suspended-state row: approver name and live expiry. The card should show
-   the suspension; the inbox owns the buttons. Clean separation, better story.
-3. Test the full path: fire Scenario C → row appears in the inbox → approve →
-   note reads "released once" → an `ALLOW_AND_FLAG` release event is written with
-   Eva's name on it. Then repeat with reject.
-4. Extend `verify-demo.ts` with an approve leg and a re-decide leg asserting 409.
+Against the live server, not reasoned about:
 
-**Not started, and fine to cut:** an approval leg in the automated verifier is
-nice-to-have; a manual run through the UI before rehearsal is sufficient.
+| Probe | Result |
+| --- | --- |
+| Scenario C fired | `REQUIRE_APPROVAL`/92, approver Eva Patel, request created |
+| `GET /api/approvals` | row shows **Alice Morgan via Provenance AI** — the human, not the app |
+| Approve as Eva | `access_released: true`, capability scoped to one action on one resource, `single_use: true` |
+| Re-decide the same request | **409** `already been settled` |
+| Approve a request addressed to someone else | **403** `not addressed to you` |
+| Reject as Julia | `access_released: false`, `capability: null` |
+| `access_event` release rows | exactly **one** — `ALLOW_AND_FLAG`, "Released once by Eva Patel". The rejection wrote nothing, as designed |
+| Expiry | fired unprompted on a stale request from earlier testing: closed as `expired`, re-opened as `-esc` against **Julia Evans**. The org-chart walk works on real data |
+| `verify-demo.ts` | still green — A 12, N 8, C 92 |
+| `GET /` | 200 |
+
+### Remaining, optional
+
+Extend `verify-demo.ts` with an approve leg and a 409 re-decide leg. The manual
+probes above cover it; automating them is insurance against a late refactor, not
+a gap in the demo.
 
 ---
 
 ## 5. Known defects and open items
 
-**Cosmetic, known, low priority.** In Scenario A the model's prose says "outside
-normal working hours" when 10:15 sits inside Alice's computed 10:04–16:52
-window. The system-derived chip correctly reads *no*. This is the model
-editorialising over a computed fact — which is precisely why the README says the
-`context_summary` facts are what hold up and the prose merely summarises them. If
-a judge reads both, own it rather than explain it away.
+**Two of the same kind, both the model doing arithmetic it should have been
+handed.** Neither is a scoring error — the bands are unaffected — but both put
+model prose next to a system-derived fact that disagrees with it.
+
+1. In Scenario A the prose says "outside normal working hours" when 10:15 sits
+   inside Alice's computed 10:04–16:52 window. The context chip correctly reads
+   *no*.
+2. In Scenario C the prose says the OAuth token was connected "approximately 10
+   months ago". `connected_at` is 2025-05-31 and the request is 2026-07-31 —
+   **14 months**. Since the "via Provenance AI" panel now computes that figure
+   from the live field, the card shows 14 months and the reasoning beneath it
+   says 10. Same card, two numbers.
+
+This is exactly why the README says the `context_summary` facts are what hold up
+and the prose merely summarises them — but (2) is now visible in one glance, so
+own it if a judge reads both.
+
+**The fix, if there is time:** pass the *derived* quantities into the prompt
+rather than raw ISO timestamps and expecting the model to subtract. Models are
+poor at date arithmetic and there is no reason to make it guess a number we have
+already computed. It touches the scoring path, so it needs a re-run of
+`verify-demo.ts` and ideally a few repeats to check the bands hold. Not started —
+this was flagged, not fixed.
 
 **Deferred from the third-party review, all prose, none blocking:**
 

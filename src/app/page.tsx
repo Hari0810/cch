@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { ApprovalInbox } from "@/components/approval-inbox";
 import { DecisionCard } from "@/components/decision-card";
 import { RequestPanel } from "@/components/request-panel";
 import { cn } from "@/lib/utils";
@@ -107,7 +108,11 @@ export default function Home() {
         </header>
 
         {active === "Dashboard" ? (
-          <div className="grid min-h-0 flex-1 grid-cols-[21rem_1fr] gap-4 p-4">
+          /* Three panes, all visible at once: what was asked, what was decided,
+             and whose desk it landed on. The approver's pane is not a separate
+             screen because "suspend, don't deny" only reads as a design rather
+             than an excuse when you can see the named human waiting. */
+          <div className="grid min-h-0 flex-1 grid-cols-[20rem_1fr_19rem] gap-4 p-4">
             <RequestPanel
               onSubmit={submit}
               pending={pending}
@@ -120,6 +125,7 @@ export default function Home() {
               error={error}
               className="min-w-0"
             />
+            <ApprovalInbox className="min-w-0" />
           </div>
         ) : (
           <div className="flex flex-1 items-center justify-center p-8">

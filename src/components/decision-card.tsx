@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   ChevronDown,
@@ -80,18 +80,26 @@ const SEVERITY: Record<
 };
 
 /**
- * Seeded facts about the connected third-party app. `context_summary` only
- * carries the app's *name* (see types.ts), so the expandable detail is looked
- * up here rather than invented per-render. Falls back to a generic line.
+ * How long before `reference` the event at `iso` happened, in words.
+ *
+ * Measured against the request's own `occurred_at`, never the wall clock. "The
+ * token was connected 14 months before this access" is a fact about the access;
+ * "14 months before right now" is a fact about when you happened to open the
+ * page, and it would drift every time the seed is regenerated.
  */
-const OAUTH_DETAIL: Record<string, string[]> = {
-  "Provenance AI": [
-    "Third-party document assistant",
-    "Scope: drive.readonly (read all files)",
-    "Connected 14 months ago by Alice Morgan",
-    "Never reviewed · dormant for 4 months",
-  ],
-};
+function sinceLabel(iso: string, reference: string): string | null {
+  const then = new Date(iso).getTime();
+  const ref = new Date(reference).getTime();
+  if (Number.isNaN(then) || Number.isNaN(ref)) return null;
+
+  const days = (ref - then) / 86_400_000;
+  if (days < 1) return "today";
+  if (days < 45) return `${Math.round(days)} days ago`;
+
+  const months = Math.round(days / 30.44);
+  if (months < 24) return `${months} months ago`;
+  return `${Math.floor(months / 12)} years ago`;
+}
 
 // ------------------------------------------------------------------ pieces
 
@@ -215,11 +223,45 @@ function ContextChips({ ctx }: { ctx: AccessDecision["context_summary"] }) {
   );
 }
 
-function ViaOAuthChip({ app }: { app: string }) {
+/**
+ * The highest-drama chip on the card, so it is the one that must not be seeded
+ * copy. Every line below is read from `context_summary.oauth_detail`, which the
+ * engine reads off the `employee` row — the same place the scorer reads it. If a
+ * reseed changes when the token was connected, this changes with it.
+ */
+function ViaOAuthChip({
+  app,
+  detail,
+  occurredAt,
+}: {
+  app: string;
+  detail: AccessDecision["context_summary"]["oauth_detail"];
+  occurredAt: string;
+}) {
   const [open, setOpen] = useState(false);
-  const detail = OAUTH_DETAIL[app] ?? [
-    "Connected third-party application acting on the principal's behalf.",
-  ];
+
+  const lines: string[] = [];
+  if (detail?.scope) lines.push(`Scope: ${detail.scope}`);
+  if (detail?.connected_at) {
+    const since = sinceLabel(detail.connected_at, occurredAt);
+    lines.push(`Connected ${since ?? detail.connected_at.slice(0, 10)}`);
+  }
+  if (detail) {
+    // An unreviewed grant is the whole provenance argument, so say it plainly
+    // rather than omitting the line when the field is null.
+    lines.push(
+      detail.last_reviewed_at
+        ? `Last reviewed ${sinceLabel(detail.last_reviewed_at, occurredAt) ?? detail.last_reviewed_at.slice(0, 10)}`
+        : "Never reviewed since it was granted",
+    );
+  }
+  if (detail?.last_used_at) {
+    const since = sinceLabel(detail.last_used_at, occurredAt);
+    if (since) lines.push(`Last used ${since}`);
+  }
+  if (lines.length === 0) {
+    lines.push("Connected third-party application acting on the principal's behalf.");
+  }
 
   return (
     <div className="flex flex-col items-start gap-1">
@@ -237,7 +279,7 @@ function ViaOAuthChip({ app }: { app: string }) {
       </button>
       {open && (
         <ul className="rounded-md border border-border bg-muted/50 px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground">
-          {detail.map((line) => (
+          {lines.map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
@@ -267,40 +309,70 @@ function Shell({
   );
 }
 
-/** Reserved for rung 2. Marked so it reads as "next", not as missing. */
-function ReservedRow({ decision }: { decision: AccessDecision | null }) {
+/**
+ * The requester's half of "suspend, don't deny". It states the suspension and
+ * names the human; it deliberately carries no approve/reject controls and no
+ * count of what is queued. Those belong to the approver's pane, which is on
+ * screen at the same time — the two panes being simultaneously visible is the
+ * argument, and duplicating the inbox's state here would mean rendering a number
+ * this component cannot actually observe.
+ */
+function SuspendedRow({ decision }: { decision: AccessDecision }) {
+  const minutes = decision.expires_in_minutes;
+
+  // The deadline is fixed once, when this decision arrives, and the countdown
+  // runs against it. Re-deriving it from `expires_in_minutes` each render would
+  // freeze the clock at 15.
+  const [deadline] = useState(() =>
+    minutes == null ? null : Date.now() + minutes * 60_000,
+  );
+  const [left, setLeft] = useState<number | null>(
+    deadline == null ? null : deadline - Date.now(),
+  );
+
+  useEffect(() => {
+    if (deadline == null) return;
+    const t = setInterval(() => setLeft(deadline - Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [deadline]);
+
+  if (!decision.approver || minutes == null) {
+    return (
+      <div className="flex min-h-12 shrink-0 items-center rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+        <span className="text-[11px] leading-snug text-muted-foreground">
+          {decision.decision === "DENY"
+            ? "Refused by policy before any context was evaluated. No approver — there is nothing here for a human to release."
+            : "No human in the path. This access proceeded on the rules alone."}
+        </span>
+      </div>
+    );
+  }
+
+  const expired = left != null && left <= 0;
+  const mm = expired ? 0 : Math.floor((left ?? 0) / 60_000);
+  const ss = expired ? 0 : Math.floor(((left ?? 0) % 60_000) / 1000);
+
   return (
-    <div className="grid min-h-24 flex-1 grid-cols-2 gap-3">
-      <div className="flex flex-col justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-3">
-        <span className="text-[11px] font-semibold tracking-tight text-muted-foreground">
-          Approve / reject
+    <div className="flex min-h-12 shrink-0 items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
+      <Inbox className="size-4 shrink-0 text-destructive" />
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-[11px] leading-snug font-medium">
+          Suspended — awaiting {decision.approver.name}
         </span>
         <span className="text-[11px] leading-snug text-muted-foreground">
-          {decision?.approver
-            ? `Awaiting ${decision.approver.name}`
-            : "Controls appear here when a decision needs a human."}
-          {decision?.expires_in_minutes != null && (
-            <>
-              {" · expires in "}
-              <span className="font-mono tabular-nums">
-                {decision.expires_in_minutes}
-              </span>
-              {" min"}
-            </>
-          )}
+          {expired
+            ? "Not answered in time. Escalated up the org chart — still suspended, never denied."
+            : "The bytes have not moved. Decide it in the approver inbox →"}
         </span>
       </div>
-      <div className="flex flex-col justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-3">
-        <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-tight text-muted-foreground">
-          <Inbox className="size-3.5" />
-          Approver inbox
-        </span>
-        <span className="text-[11px] leading-snug text-muted-foreground">
-          {decision?.approval_request_id
-            ? "1 request pending"
-            : "Empty — requests land here live."}
-        </span>
-      </div>
+      <span
+        className={cn(
+          "shrink-0 font-mono text-sm font-semibold tabular-nums",
+          expired ? "text-alert" : "text-destructive",
+        )}
+      >
+        {expired ? "expired" : `${mm}:${String(ss).padStart(2, "0")}`}
+      </span>
     </div>
   );
 }
@@ -455,7 +527,13 @@ export function DecisionCard({
               {time}
             </span>
           </div>
-          {ctx.via_oauth_app && <ViaOAuthChip app={ctx.via_oauth_app} />}
+          {ctx.via_oauth_app && (
+            <ViaOAuthChip
+              app={ctx.via_oauth_app}
+              detail={ctx.oauth_detail}
+              occurredAt={decision.occurred_at}
+            />
+          )}
         </div>
       </header>
 
@@ -498,7 +576,9 @@ export function DecisionCard({
         <PermissionChain path={decision.permission_path} />
       </div>
 
-      <ReservedRow decision={decision} />
+      {/* Keyed so a new decision remounts the countdown rather than inheriting
+          the previous request's deadline. */}
+      <SuspendedRow key={decision.access_event_id} decision={decision} />
       <RawPanel decision={decision} />
     </Shell>
   );
