@@ -1,59 +1,115 @@
 # Build plan — 1 August, code freeze 15:45
 
-> Written at 11:25 with the repo at scaffold stage: shadcn installed, Supabase
-> clients wired, `@xyflow/react` + Anthropic SDK present, all eight keys in
-> `.env.local`. No schema, no seed, no engine, no real UI.
+> **Updated 12:00.** The contract is written and three workstreams are running
+> in parallel against it. Revised from the 11:25 version: Modal is in, the OAuth
+> rung is cut to pay for it, and Runware — not Anthropic — is the model provider.
+
+## Credentials — verified, not assumed
+
+Checked live at 11:50 rather than discovered at 14:00.
+
+| | Status | Note |
+| --- | --- | --- |
+| **Supabase** | ✅ live | `auth/v1/health` 200, PostgREST 200 on service role, schema 14.15 |
+| **Runware** | ✅ working | `RUNWARE_API_KEY`, chat completions verified, ~1.5s round trip |
+| **Anthropic** | ❌ empty | No key. Not blocking — Runware serves Claude models |
+| **Modal** | ⚠️ unauthenticated | CLI 1.5.3 installed, no `~/.modal.toml`. Needs `modal token new` |
 
 ## Time budget
 
 | | |
 | --- | --- |
-| Now | 11:25 |
+| Now | 12:00 |
 | Code freeze | 15:45 |
 | Reserved — submission artefact (judging-criteria §4.4) | 15:15–15:45 |
 | Reserved — rehearsal ×2 | 14:55–15:15 |
-| **Available build time** | **~3h30m** |
+| **Available build time** | **~2h55m** |
 
 ## The ladder
 
 Rungs, not options. Each is independently demoable — the property that matters
 when the clock might beat us.
 
-| Rung | Build | Cum. | Lands | Proves |
-| --- | --- | --- | --- | --- |
-| **0 — The join** | 75m | 1h15 | ~12:40 | Context join is real; AI explains, rules decide |
-| **1 — Contrast pair + demo mechanics** | 45m | 2h00 | ~13:25 | Legitimate access untouched; not a sensitivity classifier |
-| **2 — Approval loop** | 75m | 3h15 | ~14:40 | Suspend-not-deny, audit, human-in-loop, Supabase depth |
-| **3a — OAuth identity** | 20m | 3h35 | ⚠️ ~15:00 | Vercel-breach topicality |
-| **3b — Attack graph** | 45m | 4h20 | ❌ overruns | Overmind / Edwards resonance — *or* gets dismantled |
+| Rung | Build | Lands | Proves |
+| --- | --- | --- | --- |
+| **Contract** | ✅ done | 11:55 | `supabase/schema.sql` + `src/lib/types.ts` |
+| **0 — The join** | ✅ done | 12:55 | Context join is real; AI explains, rules decide |
+| **1 — Contrast pair + demo mechanics** | ✅ done | 12:55 | Legitimate access untouched; not a sensitivity classifier |
+| **M — Modal baselining** | ✅ deployed | 12:40 | Sponsor depth; baseline as computed fact |
+| **3a — OAuth identity** | ✅ free | 12:55 | Came back — the contract already carried it |
+| **2 — Approval loop** | 75m | ~14:20 | Suspend-not-deny, audit, human-in-loop, Supabase depth |
+| ~~3b — Attack graph~~ | ~~45m~~ | ❌ cut | Overruns; the worst place to show something unrehearsed |
 
-**3b is off the table.** Demo mechanics (reset, raw-response panel) added 15m to
-rung 1, and that pushes 3a into the 14:55 rehearsal window. Building a graph on
-top of that means demoing something unrehearsed to the one judge whose company is
-built on graphs — the worst possible trade. It stays a sentence: *"the attack
-path is where this goes next, and it's the reason the agent intervenes at all"*
-(judging-criteria §4.1).
+### Verified at 12:55 — `scripts/verify-demo.ts`, all three green
 
-**The live cut line is now 3a**, and the go/no-go is **14:40**. If rung 2 isn't
-green and rehearsable by then, drop the OAuth identity and demo scenario C as
-Alice directly. The contrast between A, N and C is the product argument; the
-OAuth reveal is topicality on top of it. Losing topicality costs less than
-losing a rehearsal.
+| Scenario | Decision | Score |
+| --- | --- | --- |
+| A — Alice → Customer Export Schema, 10:15 | `ALLOW` | 12 |
+| **N — Daniel → Acquisition Valuation.xlsx, 23:20** | **`ALLOW`** | **8** |
+| **C — Provenance AI (Alice) → same file, 23:40** | **`REQUIRE_APPROVAL`** | **92** |
+
+**N and C are the same restricted file twenty minutes apart, and they land 8 vs
+92.** That is the product argument, reproducible from a script.
+
+Confirmed live, not asserted: `x-risk-provider: runware` (real model, not the
+fallback); `occurred_at` echoed as `+01:00` rather than normalised to `Z`;
+approval routed to Eva Patel with a 15-minute expiry; `oauth_detail` read from
+the database rather than a lookup table; and the permission chain rendering as
+
+> Provenance AI acts for Alice Morgan → Alice is a member of Finance Data
+> Readers → holds view on finance/ · granted 6 months ago for "Atlas Q1 cloud
+> cost attribution" · never reviewed → finance/ contains Acquisition Valuation.xlsx
+
+Baselines came back `source: "modal"` from the deployed endpoint —
+`projects_never_touched: ["beacon","nova"]` for Alice is a computed fact, which
+is what the model cites in scenario C.
+
+**Parallelism is what bought rung 0 back.** Contract-first — the DDL and the
+TypeScript types written as files before anything else — makes schema/seed,
+engine and UI genuinely independent: no shared files, no invented column names.
+Without that step, three workstreams pay the difference back at integration with
+interest.
+
+**Modal stays off the critical path** for the same reason: different language,
+different runtime, no shared files. It runs as a fourth workstream alongside
+rung 2 rather than after it. The only serial part is `modal token new`, which is
+a browser flow and therefore a human's job, not a build step.
+
+**3a came back for free.** It was cut at 11:50 to pay for Modal, but the
+contract already carried `acts_for` and `oauth_detail`, so the parallel
+workstreams built it anyway. **Scenario C is canonically Provenance AI
+delegating Alice** — in the docs, the seed, the UI and `verify-demo.ts`. Plain
+Alice remains available through the free-form builder as a fallback.
+
+**3b stays a sentence:** *"the attack path is where this goes next, and it's the
+reason the agent intervenes at all"* (judging-criteria §4.1).
 
 ## Ground rules — decided, do not revisit
 
 1. **`occurred_at` is explicit.** The request carries it; `now()` appears
    nowhere in scoring. Approval expiry is the sole carve-out. See
    [brief-extended.md](brief-extended.md) §4.
-2. **No Supabase Auth.** Nobody logs in during a three-minute demo. An identity
+2. **Runware is the model provider.** OpenAI-compatible endpoint at
+   `https://api.runware.ai/v1/chat/completions`, model
+   `anthropic-claude-sonnet-4-6`. The scorer sits behind the `RiskScorer`
+   interface in `types.ts`, so the provider is a five-line adapter — Anthropic
+   and a no-credential heuristic fallback are both kept for that reason.
+   **Parsing note:** Sonnet returns bare JSON, Haiku wraps it in a markdown
+   fence. Strip fences before parsing, always.
+3. **Modal runs at seed time, never in the request path.** A cold start inside a
+   live access decision is the single most likely way the demo dies. Precomputing
+   is also the honest production design — baselining is batch by nature. If a
+   judge asks whether Modal is in the decision path, that is the answer, and it
+   is a good one rather than a defensive one.
+4. **No Supabase Auth.** Nobody logs in during a three-minute demo. An identity
    dropdown is enough. Auth is a 45-minute trap with zero rubric payoff.
-3. **Seed rows are hardcoded; decisions never are.** The outcome must fall out
+5. **Seed rows are hardcoded; decisions never are.** The outcome must fall out
    of the join or the whole product is theatre.
-4. **SQL goes into the Supabase SQL editor**, not `supabase init` + migrations.
+6. **SQL goes into the Supabase SQL editor**, not `supabase init` + migrations.
    Save the tooling ceremony for a project with a week in it.
-5. **No ERP surface.** No employee list, no resource catalogue, no dashboard
+7. **No ERP surface.** No employee list, no resource catalogue, no dashboard
    stats. Hours spent, nothing scored — brief-extended §8.
-6. **All timestamps derive from one `SEED_ANCHOR`.** Re-seeding at any hour
+8. **All timestamps derive from one `SEED_ANCHOR`.** Re-seeding at any hour
    must produce a coherent world.
 
 ---
@@ -62,12 +118,20 @@ losing a rehearsal.
 
 The entire product argument. If everything after this fails, this still demos.
 
-### Schema — 12m
+### Schema — ✅ written, needs pasting
 
-Eight tables, not the six quoted earlier. `group` and `group_membership` are
-two columns each and they carry Alice's permission path; without them her access
-to Nova is a *direct grant*, which is the contrived version of the story and the
-first thing a judge would pull on.
+Lives in [../supabase/schema.sql](../supabase/schema.sql). **Eleven tables**, not
+the six first quoted or the eight after that — `user_group` and
+`group_membership` carry Alice's permission path, `behaviour_profile` is the
+Modal output, `access_event` doubles as seeded history and evaluated request,
+and `approval_request` is rung 2.
+
+`user_group` and `group_membership` are two columns each; without them Alice's
+access to Nova is a *direct grant*, which is the contrived version of the story
+and the first thing a judge would pull on.
+
+**Manual step:** paste `schema.sql` into the Supabase SQL editor. It drops and
+recreates, so it is safe to re-run.
 
 ```
 employee(id, name, role, department, manager_id,
@@ -192,12 +256,12 @@ lands on the §3.1 "trivial / hardcoded / demo-only" anchor.
 
 ```
 ┌─ Request ─────────────────┐  ┌─ Decision ──────────────────┐
-│ ▸ Alice    → Export Schema│  │  ALLOW              risk 8  │
-│              10:15        │  │  ✓ Assigned to Atlas        │
-│ ▸ Daniel   → Valuation… │  │  ✓ Active task: Review…     │
-│              23:20        │  │  ✓ Familiar resource type   │
-│ ▸ Provenance AI → Valuation…│  └─────────────────────────────┘
-│   (delegating Alice) 23:40│  ┌─ Approval inbox (Eva) ──────┐
+│ ▸ Alice   → Export Schema │  │  ALLOW              risk 8  │
+│             10:15         │  │  ✓ Assigned to Atlas        │
+│ ▸ Daniel  → Valuation.xlsx│  │  ✓ Active task: Review…     │
+│             23:20         │  │  ✓ Familiar resource type   │
+│ ▸ Alice   → Valuation.xlsx│  └─────────────────────────────┘
+│             23:40         │  ┌─ Approval inbox (Eva) ──────┐
 └───────────────────────────┘  │  empty                      │
                                └─────────────────────────────┘
 ```
@@ -218,8 +282,8 @@ already-visible panel looks identical from the audience.
 | 0:00 | The gap — *"permissions answer whether you can; nothing answers whether you should, right now"* | — |
 | 0:25 | **Click 1** — Alice → Export Schema | `ALLOW`, three green reasons |
 | 0:45 | **Click 2** — Daniel → Valuation.xlsx, 23:20 | `ALLOW`. *"Restricted file, 11pm, allowed — he owns the task"* |
-| 1:10 | **Click 3** — Provenance AI → same file, 23:40 | Reasons stack: no membership, no task, restricted, first-ever Nova, burst |
-| 1:35 | Expand the **"via Provenance AI"** chip | 14-month-old token, dormant 4 months, never reviewed |
+| 1:10 | **Click 3** — Alice → same file, 23:40 | Reasons stack: no membership, no task, restricted, first-ever Nova, burst |
+| 1:35 | Point at the **permission chain** on the card | Alice → Finance Data Readers → finance/ → the file. *"Granted six months ago for cost attribution. Never reviewed. The permission was correct — it just stopped being relevant."* |
 | 1:55 | — | `REQUIRE_APPROVAL`; approval lands in Eva's inbox live |
 | 2:15 | Approve as Eva | Audit row writes, decision updates |
 | 2:35 | Threshold table — *"AI explains, rules decide"* | — |
@@ -268,25 +332,74 @@ are the extras), ~10m more for the builder.
 
 This rung is where §3.7 says the cheapest 5 on the board sits.
 
-## Rung 3a — OAuth identity (20m)
+## Rung M — Modal behavioural baselining (35m, parallel)
 
-`identity_type = 'oauth_app'` on employee, plus `acts_for` and `last_used_at`.
-Seed **Provenance AI**: connected anchor − 14 months, Drive read-all, never
-reviewed, `last_used_at` anchor − 4 months.
+A deployed Modal function that reads the seeded `access_event` history and writes
+one `behaviour_profile` row per employee: typical hours, project mix, resource
+category mix, p95 files/hour, download ratio, and the list of projects never
+touched.
 
-The request arrives as `Provenance AI (delegated: Alice)`. The UI leads with
-Alice's name because she is the principal; the reveal is expanding a *"via
-Provenance AI"* chip. True to the data rather than narrated twice.
+- **Light image — numpy only.** No model download, so it deploys in about a
+  minute rather than five. The heavy-image route is where Modal eats an hour.
+- **Runs at seed time**, invoked from `POST /api/reset` after seeding. See ground
+  rule 3 for why it is not in the request path.
+- **What it buys:** scenario C's *"does not normally access finance resources"*
+  and *"first-ever Nova access"* become computed facts rather than seeded
+  strings. That is the difference between a baseline and a label.
+- **Blocked on** `modal token new` — a browser flow, so a human's job.
 
-"A dormant token woke up at 23:40" is the cheapest strong signal available and
-it is exactly the Vercel shape.
+One sentence in the demo: *"behavioural baselines are computed on Modal from
+access history — that's what makes 'she doesn't normally do this' a number."*
 
-## Rung 3b — attack graph (45m, conditional)
+## ~~Rung 3a — OAuth identity~~ — cut
 
-`@xyflow/react` is installed. Alice → Engineering Leads → finance/ share → Nova
-acquisition model, with the permission provenance on the edge.
+Traded for Modal. The schema and seed still carry `identity_type='oauth_app'`,
+`acts_for`, `connected_at`, `scope`, `last_reviewed_at` and `last_used_at`, and
+Provenance AI is still seeded — so this is **UI work only** if time reappears.
+Restore it before anything else.
 
-Go/no-go 14:45. See the cut line above.
+Until then, scenario C runs as Alice directly. The A/N/C contrast carries the
+product argument; the OAuth reveal was topicality on top of it.
+
+## ~~Rung 3b — attack graph~~ — cut
+
+The real graph-analysis rung remains cut. Do not add graph traversal, change the
+decision contract, or put a graph on the rehearsed demo path. `@xyflow/react`
+stays installed for the eventual implementation.
+
+### Static attack-path placeholder — planned, isolated work only
+
+A presentation-only scaffold may be built without reopening rung 3b. Its job is
+to de-risk the visual language and leave a clean integration seam; it must not
+claim that graph analysis is implemented.
+
+To keep this from colliding with the approval-loop and demo work:
+
+- Build it in a **separate Git worktree and feature branch**, based on committed
+  `HEAD`. The current working tree contains active, uncommitted work from other
+  agents.
+- Add only uniquely owned files under `src/components/attack-graph/` and an
+  unlinked `src/app/attack-preview/` route. Do not edit `src/app/page.tsx`,
+  `decision-card.tsx`, `src/lib/types.ts`, the engine, API routes, seed,
+  `globals.css`, or either lockfile while scaffolding.
+- Keep the preview fixture local to the feature. Show the intended path — Alice
+  → Finance Data Readers → `finance/` → Acquisition Valuation.xlsx — with the
+  six-month-old grant reason on the permission edge. An optional dashed
+  Provenance AI → Alice delegation edge may be visually secondary.
+- Mark the screen **Static attack-path preview**. Use a read-only React Flow
+  canvas: no connecting, editing or user-authored nodes. Use semantic colour
+  tokens only.
+- Import React Flow's base stylesheet inside the preview route/layout rather
+  than modifying the shared global stylesheet.
+
+The scaffold is done when `/attack-preview` renders directly, lint/build pass
+in its worktree, and no request, score, decision or audit behaviour changes.
+
+Integration is a later, separately reviewed change after the main demo path is
+green: mount the component behind the existing Attack tab and adapt the live
+`decision.permission_path` into view nodes and edges. Do not enrich the shared
+contract merely to make placeholder labels prettier; that can be evaluated with
+the real graph-analysis rung after the hackathon.
 
 ---
 

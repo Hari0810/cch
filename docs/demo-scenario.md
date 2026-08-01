@@ -245,13 +245,22 @@ the block reads as paranoia rather than discrimination.
 Daniel opens **Acquisition Valuation.xlsx** at `anchor 23:20`.
 
 Nova member · owns "Prepare acquisition model", due tomorrow · **restricted
-resource** · **outside baseline hours** · high velocity.
+resource** · **outside baseline hours** · established history on the project.
 
 *The same file, the same hour, the opposite outcome.* This is the only
 construction that proves the score comes from the context join rather than from
 `sensitivity × hour_of_day`. **It cannot be cut.**
 
-### B — unusual but explainable → `ALLOW` *(optional)*
+### B — CUT
+
+*Kept for the record, not for the demo.* Its justification is a cross-project
+architecture review with **no `project_id`** — so the documented task→project ↔
+resource→project join cannot connect it to Beacon, and the scenario would have
+to be argued rather than computed. Repairing an optional scenario is not worth
+the time, and a scenario the engine cannot actually justify is worse than no
+scenario at all.
+
+<details><summary>Original definition</summary>
 
 Alice opens **Beacon Architecture Doc** at `anchor 20:30`.
 
@@ -259,8 +268,7 @@ Not a Beacon member · confidential, not restricted · **Julia's cross-project
 architecture review explains it** · off-hours · unfamiliar project.
 
 Every signal a UEBA would alert on, allowed because a task explains it. That is
-the version that teaches a judge something. Include only if rung 2 finishes
-early — see [plan.md](plan.md).
+the version that teaches a judge something. </details>
 
 ### C — compromised OAuth token → `REQUIRE_APPROVAL`
 
@@ -269,8 +277,13 @@ early — see [plan.md](plan.md).
 
 RBAC permission exists via `finance-data-readers` · **not a Nova member** · **no
 task references Nova** · restricted · outside Alice's hours · unfamiliar
-resource type · **multiple Nova files in rapid succession** · 14-month-old
+resource type · Nova is in her computed `projects_never_touched` · 14-month-old
 third-party token, dormant 4 months, never reviewed.
+
+> **Not claimed on stage:** a rapid multi-file burst. The seed contains no
+> same-hour Nova burst, so the velocity signal is genuinely zero here. The
+> A/N/C contrast does not need it, and asserting a signal the data does not
+> support is the one thing that would undo the whole argument.
 
 The UI leads with Alice's name — she is the principal — and the reveal is
 expanding a *"via Provenance AI"* chip. True to the data rather than narrated twice.
@@ -292,8 +305,12 @@ Eva receives:
 Four outcomes: `ALLOW` · `ALLOW_AND_FLAG` · `STEP_UP` · `REQUIRE_APPROVAL`.
 Thresholds live in one exported object — [brief-extended.md](brief-extended.md) §4.
 
-- **Approver:** Eva, as Nova's project owner. A human who owns the resource, not
-  a security queue.
+- **Approver:** Eva, as Nova's **project owner**. Note Daniel owns the file
+  itself — authority to release access comes from owning the *project*, not the
+  individual row. A named human, not a security queue.
+- **The approver is NOT authenticated.** The approve/reject control is
+  simulated for the demo. Say so before a judge asks; production inherits
+  approver identity from the IdP.
 - **Expiry:** 15 minutes, on real wall-clock — the sole place `now()` is correct.
 - **At minute 16: escalate to Julia**, not deny. "Suspend, don't deny" and a hard
   expiry are otherwise in tension.

@@ -17,11 +17,14 @@ thread says `ContextGuard`. Both are dead. Don't reintroduce them.
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · shadcn/ui
-(`radix-nova`, neutral base) · Supabase · Anthropic SDK · zod · `@xyflow/react`.
+(`radix-nova`, neutral base) · Supabase · Modal · **Runware** (LLM inference) ·
+zod · `@xyflow/react`. The Anthropic SDK is installed and kept as a second
+adapter behind the `RiskScorer` interface, but `ANTHROPIC_API_KEY` is empty and
+**Runware is the live provider** — see ground rule 8.
 
 **Package manager is pnpm** — `pnpm-lock.yaml` and `pnpm-workspace.yaml` are
-committed. Note that [docs/ui.md](docs/ui.md) shows `npx shadcn@latest add`;
-prefer `pnpm dlx shadcn@latest add` so the lockfile stays consistent.
+committed. Use `pnpm dlx shadcn@latest add <component>`, never `npx`, so the
+lockfile stays consistent.
 
 ```bash
 pnpm dev      # next dev
@@ -85,8 +88,18 @@ to rediscover.
 - **Merge classes with `cn`** from `@/lib/utils` so caller overrides win.
 - **Providers are wired once** in `src/app/layout.tsx` — `TooltipProvider` and
   `Toaster`. Fire toasts with `toast()` from `sonner`.
-- **Dark mode is defined but not switchable.** Tokens exist, `next-themes` is
-  installed, no `ThemeProvider` is mounted.
+- **The app is dark-only.** `<html>` carries a literal `dark` class in
+  `layout.tsx` and `color-scheme: dark` is set in `globals.css`; the light `:root`
+  tokens are kept as the reference values but never render. There is no toggle —
+  `next-themes` is installed but no `ThemeProvider` is mounted, so anything
+  calling `useTheme()` sees `"system"` and must be pinned by hand (the `Toaster`
+  in `layout.tsx` is the one instance). The `.dark` neutrals carry a faint cool
+  tint at hue 265 so the warm severity ramp stays separated from the chrome.
+- **Fonts are Geist / Geist Mono**, loaded by `next/font` in `layout.tsx` as
+  `--font-geist-sans` / `--font-geist-mono` and mapped onto `--font-sans`,
+  `--font-mono` and `--font-heading` in the `@theme inline` block. Those tokens
+  must point at the `--font-geist-*` variables — a self-reference is invalid at
+  computed-value time and silently drops the whole app to serif.
 - **The decision card is the screen that gets judged.** Request, risk score,
   plain-English reasons and the approval action must be legible together,
   without scrolling. Lay it out with room for the approval controls before they
@@ -114,8 +127,17 @@ Two constraints, both already commented in the file and both easy to break:
 
 ## Housekeeping
 
-- **Never commit `.env.local`.** All eight keys (Supabase ×3, Anthropic ×2,
-  Modal ×3) are already present locally; `.env.example` carries the names.
+- **Never commit `.env.local`.** `.env.example` carries the names. Live keys:
+  Supabase ×3, `RUNWARE_API_KEY`, `MODAL_SCORING_ENDPOINT`. `ANTHROPIC_API_KEY`
+  is deliberately empty — Runware serves Claude models, so no Anthropic key is
+  needed.
 - The docs are the thinking. If a decision changes, change the doc in the same
   commit — a stale doc here is worse than none, because the next agent will
   trust it.
+- **Commit and push at every working checkpoint** — each rung finished, each
+  verified fix, each doc pass. Not at the end. This is a one-day build on a
+  laptop against a 15:45 freeze: the failure we are insuring against is losing an
+  afternoon of work, and a green `verify-demo.ts` that only exists locally is not
+  yet a submission. Push, don't just commit.
+- Before pushing, check `git status` for `.env.local` and for anything under a
+  path you did not intend to add. Keys leak by accident, not by decision.

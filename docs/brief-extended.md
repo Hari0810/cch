@@ -153,8 +153,11 @@ Consequences, all of them cheap:
   hardcoded dates. Re-seeding at any hour produces a coherent world.
 - Scenarios become deterministic and replayable. The same request yields the
   same time signal at 11:00 during a rehearsal and at 16:35 on stage.
-- It is also the honest production design: a gateway receives the event time
-  from the caller. Inventing one at evaluation time would be wrong anyway.
+- **In production the gateway must stamp the time itself.** Caller-supplied
+  time is right for a replayable demo and wrong for a real deployment: an
+  attacker who can assert their own timestamp can simply claim 10:15. The
+  trusted enforcement point stamps it, or it is signed by something that did.
+  Only the demo simulator accepts arbitrary scenario time.
 
 **One carve-out:** approval expiry runs on real wall-clock, because a human is
 genuinely waiting fifteen minutes. Expiry is the only place `now()` is correct.
@@ -167,7 +170,7 @@ genuinely waiting fifteen minutes. Expiry is the only place `now()` is correct.
   "occurred_at": "2026-08-01T23:40:00Z",
   "risk_score": 88,
   "policy_reasons": [
-    "Resource is classified as confidential",
+    "Resource is classified as restricted",
     "User is not assigned to Project Nova",
     "No active task establishes a business purpose",
     "Access differs from the user's normal behaviour"
@@ -187,7 +190,9 @@ So the top action is **pause and request approval**, never hard deny. Consequenc
 - A false positive costs a colleague ninety seconds, not a lost afternoon.
 - The user always sees the reason, in plain English.
 - Every decision is contestable, and the contest is logged.
-- The approver is a **human who owns the resource**, not a security queue.
+- The approver is the **project/data owner** — Eva owns Project Nova — not a
+  security queue. (Daniel owns the file itself; ownership of the *project* is
+  what confers authority to release access to it.)
 
 State this explicitly in the pitch. "We suspend, we don't deny" pre-empts the
 first question every experienced judge will ask.
@@ -205,10 +210,12 @@ otherwise is worse than addressing it:
 
 ## 6. The OAuth angle (keep it small)
 
-In April 2026, attackers compromised an OAuth token belonging to a third-party
-integration and used it to read customer data across multiple SaaS tenants. The
-token was valid. It had been granted months earlier. Password and MFA were
-irrelevant — the token bypassed both by design.
+In April 2026, attackers compromised a third-party AI tool's OAuth
+integration — an app with reach into many of that vendor's customers — and
+pivoted through it into a single Vercel employee account, exposing credentials
+for a limited subset of customers. The token was valid. It had been granted
+months earlier. Password and MFA were irrelevant — the token bypassed both by
+design. (Precise scope in [vercel.md](vercel.md); do not embellish it on stage.)
 
 This is the same shape as the Alice scenario with a non-human identity:
 technically permitted, contextually indefensible.
@@ -263,7 +270,6 @@ Named so nobody quietly starts building them:
 | [brief.md](brief.md) | The original one-page pitch. |
 | [judging-criteria.md](judging-criteria.md) | Seven criteria, the judges, the demo beat map. |
 | [cursor-hackathon.md](cursor-hackathon.md) | Schedule, partners, submission mechanics. |
-| [backend.md](backend.md) | Data model, API surface, decision engine. |
-| [frontend.md](frontend.md) | Screens, routes, UI stack and conventions. |
-| [design-plans/backend.md](design-plans/backend.md) | Today's ordered backend build plan. |
-| [design-plans/frontend.md](design-plans/frontend.md) | Today's ordered frontend build plan. |
+| [vercel.md](vercel.md) | The April 2026 incident, with accuracy notes. |
+| [../README.md](../README.md) | The submission artefact. |
+| [../AGENTS.md](../AGENTS.md) | Conventions and load-bearing rules. |

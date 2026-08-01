@@ -22,7 +22,7 @@ utilities, and `:root` / `.dark` hold the oklch values.
 ## Adding a component
 
 ```bash
-npx shadcn@latest add <component>
+pnpm dlx shadcn@latest add <component>
 ```
 
 It writes to `src/components/ui/` and installs any Radix primitive it needs. Prefer this
@@ -63,3 +63,34 @@ against a "Coming soon" panel. The nav is hand-rolled `<button>` elements with
 If it grows past a mockup, convert it: `Tabs` accepts `orientation="vertical"`, which
 gives the rail real `tab` / `tabpanel` semantics and arrow-key navigation for free.
 Once the nav needs to be collapsible or work on mobile, install `sidebar` instead.
+
+## Attack-path placeholder
+
+Rung 3b's graph analysis is still cut; [plan.md](plan.md) defines the boundary.
+The planned placeholder is a static, presentation-only preview and must remain
+isolated from the decision screen until the main demo path is complete.
+
+Suggested ownership:
+
+```text
+src/components/attack-graph/
+  attack-graph.tsx       # read-only React Flow canvas
+  graph-model.ts         # view-layer node and edge types only
+  demo-fixture.ts        # explicitly static preview data
+
+src/app/attack-preview/
+  layout.tsx             # route-local React Flow stylesheet import
+  page.tsx               # unlinked preview surface
+```
+
+The component should accept a small view model rather than query Supabase or
+call the decision API itself. Keep controls, dragging and connection handles
+disabled; `fitView` is sufficient for the four-node permission path. Edge
+labels carry provenance, while node styling distinguishes identity, group,
+folder and restricted file using semantic tokens.
+
+The fixture is allowed to be hardcoded because it is labelled as a visual
+preview. It must never supply or influence a decision. When integration is
+approved later, a thin adapter at the caller converts
+`AccessDecision.permission_path` to this view model; the graph component stays
+unaware of engine and API types.
