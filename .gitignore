@@ -48,3 +48,6 @@ next-env.d.ts
 
 # verification screenshots — written to the repo root by Playwright runs
 /*.png
+
+# second dev server for the employee workspace (NEXT_DIST_DIR)
+/.next-workspace/
