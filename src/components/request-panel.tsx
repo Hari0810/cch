@@ -111,6 +111,22 @@ export const SCENARIOS: Scenario[] = [
   },
 ];
 
+/**
+ * The free-form builder is hidden — 14:40, superseded rather than abandoned.
+ *
+ * Its job was the Q&A answer: *"pick any combination you like"*, so a judge
+ * could drive the engine themselves and see the outcome is not three canned
+ * responses (plan.md, "Two things that stop it looking canned"). The employee
+ * workspace on port 3001 does that better in every respect — any identity, any
+ * file, browsed in a real file manager, and it shows whether the **bytes**
+ * arrive rather than only what the card says about them.
+ *
+ * Kept in the tree rather than deleted: it is the fallback if the second dev
+ * server is not running when the question comes. Flip this to `true` and the
+ * panel is back, with no other change.
+ */
+const SHOW_BUILDER = false;
+
 export function RequestPanel({
   onSubmit,
   pending,
@@ -220,12 +236,14 @@ export function RequestPanel({
         </p>
       </div>
 
-      <Separator className="my-4" />
+      {SHOW_BUILDER && (
+        <>
+          <Separator className="my-4" />
 
-      <div className="flex flex-col gap-2.5 px-4 pb-4">
-        <h3 className="text-xs font-semibold tracking-tight text-muted-foreground">
-          Build your own
-        </h3>
+          <div className="flex flex-col gap-2.5 px-4 pb-4">
+            <h3 className="text-xs font-semibold tracking-tight text-muted-foreground">
+              Build your own
+            </h3>
 
         <div className="grid gap-1">
           <Label htmlFor="identity" className="text-xs">
@@ -305,12 +323,14 @@ export function RequestPanel({
           disabled={pending}
           className="mt-1 w-full"
         >
-          {pending && activeKey === "custom" && (
-            <LoaderCircle className="animate-spin" />
-          )}
-          Evaluate request
-        </Button>
-      </div>
+              {pending && activeKey === "custom" && (
+                <LoaderCircle className="animate-spin" />
+              )}
+              Evaluate request
+            </Button>
+          </div>
+        </>
+      )}
     </section>
   );
 }

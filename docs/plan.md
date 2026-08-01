@@ -353,10 +353,13 @@ stops a judge concluding we built a sensitivity-and-clock heuristic.
 
 ### Two things that stop it looking canned
 
-- **A free-form request builder** below the buttons — identity, resource, time.
-  Never used in the scripted three minutes; used in Q&A: *"pick any combination
-  you like."* A judge driving it themselves outweighs anything we can say. ~10m
-  on top of rung 1, since the route already exists.
+- ~~**A free-form request builder** below the buttons~~ — built, then **hidden
+  at 14:40**. Its job was the Q&A answer *"pick any combination you like"*, and
+  the employee workspace on port 3001 does that better in every respect: any
+  identity, any file, browsed in a real file manager, and it shows whether the
+  **bytes** arrive rather than only what the card says about them. Still in the
+  tree behind `SHOW_BUILDER` in `components/request-panel.tsx` — flip it to
+  `true` if the second dev server is not up when the question comes.
 - **A collapsed raw-response panel.** Nobody reads it. Its presence says the card
   renders a real response rather than a state machine.
 
