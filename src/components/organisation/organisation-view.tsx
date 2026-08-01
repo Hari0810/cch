@@ -43,7 +43,7 @@ import {
   formatDate,
   formatTime,
 } from "./primitives";
-import type { OrgSnapshot } from "./types";
+import type { OrgProject, OrgSnapshot } from "./types";
 
 // ---------------------------------------------------------------------- shell
 
@@ -302,7 +302,25 @@ function SoftwareSection({ org }: { org: OrgSnapshot }) {
 
 // --------------------------------------------------------------- 2. projects
 
+/**
+ * Master–detail rather than a grid of cards.
+ *
+ * Side by side, three project cards read as "here are our three projects" and a
+ * judge skims them. One at a time, with the others named down the left, the
+ * screen answers a question instead: *what is Nova, and who is on it* — which is
+ * the question scenario C turns on, since Alice is not on that list.
+ *
+ * Selection is local UI state and touches nothing else. This pane still only
+ * displays.
+ */
 function ProjectsSection({ org }: { org: OrgSnapshot }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Falls back to the first project rather than holding a dangling id, so a
+  // reseed that renames or drops a project cannot leave an empty pane.
+  const selected =
+    org.projects.find((p) => p.id === selectedId) ?? org.projects[0] ?? null;
+
   return (
     <div className="space-y-4">
       <SectionHeader
@@ -310,60 +328,154 @@ function ProjectsSection({ org }: { org: OrgSnapshot }) {
         note="Rows from project, with members from project_membership. Project membership is what the engine joins a request against — it is separate from permission."
       />
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        {org.projects.map((p) => (
-          <Card key={p.id} className="gap-0 overflow-hidden py-0">
-            <CardHeader className="gap-2 border-b px-5 py-4">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="text-base font-semibold tracking-tight">
-                  {p.name}
-                </span>
-                <Badge variant="outline" className="capitalize">
-                  {p.status}
-                </Badge>
-                <SensitivityBadge value={p.sensitivity} />
-                <RowId id={p.id} />
-              </div>
-              {p.purpose && (
-                <p className="text-xs text-muted-foreground">{p.purpose}</p>
-              )}
-            </CardHeader>
-
-            <CardContent className="space-y-4 px-5 py-4">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Owner">{p.owner?.name}</Field>
-                <Field label="Started">{formatDate(p.started_at)}</Field>
-                <Field label="Ends">{formatDate(p.ended_at) ?? "Open"}</Field>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
-                  Members ({p.member_count})
-                </div>
-                <ul className="space-y-1">
-                  {p.members.map((m) => (
-                    <li
-                      key={m.id}
-                      className="flex items-baseline justify-between gap-3 text-sm"
-                    >
-                      <span className="truncate">{m.name}</span>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {m.role_on_project ?? "—"}
-                      </span>
-                    </li>
-                  ))}
-                  {p.members.length === 0 && (
-                    <li className="text-sm text-muted-foreground">
-                      No members.
-                    </li>
+      {org.projects.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No projects.</p>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[15rem_1fr]">
+          <nav
+            aria-label="Projects"
+            className="flex flex-col gap-1 lg:sticky lg:top-0 lg:self-start"
+          >
+            {org.projects.map((p) => {
+              const active = selected?.id === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-current={active ? "true" : undefined}
+                  onClick={() => setSelectedId(p.id)}
+                  className={cn(
+                    "rounded-lg border px-3 py-2.5 text-left transition-colors",
+                    active
+                      ? "border-border bg-accent text-accent-foreground"
+                      : "border-transparent text-muted-foreground hover:bg-accent/50",
                   )}
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "truncate text-sm",
+                        active ? "font-semibold text-foreground" : "font-medium",
+                      )}
+                    >
+                      {p.name}
+                    </span>
+                    <SensitivityBadge value={p.sensitivity} />
+                  </div>
+                  {p.purpose && (
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                      {p.purpose}
+                    </p>
+                  )}
+                  <p className="mt-1 text-[0.6875rem] text-muted-foreground tabular-nums">
+                    {p.member_count}{" "}
+                    {p.member_count === 1 ? "member" : "members"}
+                  </p>
+                </button>
+              );
+            })}
+          </nav>
+
+          {selected && <ProjectDetail org={org} project={selected} />}
+        </div>
+      )}
     </div>
+  );
+}
+
+function ProjectDetail({
+  org,
+  project: p,
+}: {
+  org: OrgSnapshot;
+  project: OrgProject;
+}) {
+  // Derived by filtering rows already on the payload — no second request, and
+  // nothing here that the resources section does not also show.
+  const resources = org.resources.filter((r) => r.project?.id === p.id);
+
+  return (
+    <Card className="min-w-0 gap-0 overflow-hidden py-0">
+      <CardHeader className="gap-2 border-b px-5 py-4">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="text-base font-semibold tracking-tight">
+            {p.name}
+          </span>
+          <Badge variant="outline" className="capitalize">
+            {p.status}
+          </Badge>
+          <SensitivityBadge value={p.sensitivity} />
+          <RowId id={p.id} />
+        </div>
+        {p.purpose && (
+          <p className="text-xs text-muted-foreground">{p.purpose}</p>
+        )}
+      </CardHeader>
+
+      <CardContent className="space-y-5 px-5 py-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Owner">{p.owner?.name}</Field>
+          <Field label="Started">{formatDate(p.started_at)}</Field>
+          <Field label="Ends">{formatDate(p.ended_at) ?? "Open"}</Field>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <div className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+            Members ({p.member_count}) · project_membership
+          </div>
+          <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+            {p.members.map((m) => (
+              <li
+                key={m.id}
+                className="flex items-baseline justify-between gap-3 text-sm"
+              >
+                <span className="truncate">{m.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {m.role_on_project ?? "—"}
+                </span>
+              </li>
+            ))}
+            {p.members.length === 0 && (
+              <li className="text-sm text-muted-foreground">No members.</li>
+            )}
+          </ul>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <div className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+            Resources ({resources.length}) · resource.project_id
+          </div>
+          <ul className="space-y-1">
+            {resources.map((r) => (
+              <li
+                key={r.id}
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm"
+              >
+                <span className="truncate">{r.name}</span>
+                <SensitivityBadge value={r.sensitivity} />
+                <span className="font-mono text-xs text-muted-foreground">
+                  {r.type}
+                </span>
+                {r.parent && (
+                  <span className="text-xs text-muted-foreground">
+                    inside {r.parent.name}
+                  </span>
+                )}
+              </li>
+            ))}
+            {resources.length === 0 && (
+              <li className="text-sm text-muted-foreground">
+                No resources belong to this project.
+              </li>
+            )}
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
