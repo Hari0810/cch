@@ -103,9 +103,7 @@ function Row({
               size="sm"
               variant="outline"
               disabled={busy}
-              onClick={() =>
-                onDecide(item.approval_request_id, item.approver_name, "approve")
-              }
+              onClick={() => onDecide(item, "approve")}
               className="h-7 flex-1 text-xs"
             >
               <CheckCircle2 className="size-3.5" />
@@ -115,9 +113,7 @@ function Row({
               size="sm"
               variant="outline"
               disabled={busy}
-              onClick={() =>
-                onDecide(item.approval_request_id, item.approver_name, "reject")
-              }
+              onClick={() => onDecide(item, "reject")}
               className="h-7 flex-1 text-xs"
             >
               <XCircle className="size-3.5" />
@@ -157,36 +153,31 @@ export function ApprovalInbox({ className }: { className?: string }) {
     return () => clearInterval(t);
   }, [load]);
 
-  async function decide(
-    id: string,
-    approverName: string,
-    decision: "approve" | "reject",
-  ) {
-    setBusy(id);
+  async function decide(item: PendingApproval, decision: "approve" | "reject") {
+    setBusy(item.approval_request_id);
     setNote(null);
     try {
-      const item = items.find((i) => i.approval_request_id === id);
       const res = await fetch("/api/approvals/decide", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          approval_request_id: id,
+          approval_request_id: item.approval_request_id,
           decision,
-          // DEMO ONLY. Production reads the approver from the IdP session; here
-          // we send back the id the request was addressed to, which is a routing
-          // check and not an authentication one. Called out in the UI below.
-          approver_id: await approverIdFor(id),
+          // DEMO ONLY, and the one seam worth pointing at during Q&A. The row
+          // already carries who it is addressed to, so the client echoes it and
+          // the API checks the match. That is routing, not authentication —
+          // production reads this from the IdP session and never the body.
+          approver_id: item.approver_id,
           justification:
             decision === "approve"
-              ? `Released by ${approverName} from the approver inbox`
-              : `Refused by ${approverName} from the approver inbox`,
+              ? `Released by ${item.approver_name} from the approver inbox`
+              : `Refused by ${item.approver_name} from the approver inbox`,
         }),
       });
       const body = await res.json();
       if (!res.ok) {
         setNote(
-          body?.error ??
-            `Could not record the decision (${res.status}). ${item?.resource_name ?? ""}`,
+          body?.error ?? `Could not record the decision (${res.status}).`,
         );
       } else {
         const outcome = body as ApprovalOutcome;
@@ -258,19 +249,4 @@ export function ApprovalInbox({ className }: { className?: string }) {
       </footer>
     </section>
   );
-}
-
-/**
- * The approval row already knows who it is addressed to, and the API rejects a
- * mismatch — so the client simply echoes it back. This exists as a named
- * function rather than inline so the seam where a real session would be read is
- * obvious to anyone auditing the file.
- */
-async function approverIdFor(approvalRequestId: string): Promise<string> {
-  const res = await fetch("/api/approvals", { cache: "no-store" });
-  const body = (await res.json()) as { approvals?: Array<PendingApproval> };
-  const match = body.approvals?.find(
-    (a) => a.approval_request_id === approvalRequestId,
-  );
-  return match?.approver_id ?? "";
 }
