@@ -54,14 +54,24 @@ Reproducible via `scripts/verify-demo.ts`:
 
 | # | Request | Decision | Score |
 | --- | --- | --- | --- |
-| A | Alice → Customer Export Schema, 10:15 | `ALLOW` | 12 |
-| **N** | **Daniel → Acquisition Valuation.xlsx, 23:20** | **`ALLOW`** | **8** |
+| A | Alice → Customer Export Schema, 10:15 | `ALLOW` | 4 |
+| **N** | **Daniel → Acquisition Valuation.xlsx, 23:20** | **`ALLOW`** | **18–22** |
 | **C** | **Provenance AI (for Alice) → same file, 23:40** | **`REQUIRE_APPROVAL`** | **92** |
 
-**N and C are the same restricted file, twenty minutes apart, and they land 8
+Scores are from three consecutive runs at temperature 0.2 — A was 4 every time,
+C was 92 every time, N moved between 18 and 22. The script asserts **decisions
+and bands, never exact scores**, and looks identities up by name, so it survives
+both score drift and a reseed.
+
+**N and C are the same restricted file, twenty minutes apart, and they land 18
 versus 92.** That contrast is the whole argument. A late-night read of a
 restricted finance document is *fine* when the person owns the task that needs
 it. The score comes from work context — not from a sensitivity label and a clock.
+
+Daniel's 23:20 access takes a modest off-hours bump and is allowed anyway. That
+is the point rather than a blemish on it: the hour is a **weak signal that does
+not dominate the verdict**, which is what stops the system penalising anyone who
+does not work nine to five.
 
 For C, the model cites facts the system computed rather than facts we seeded:
 

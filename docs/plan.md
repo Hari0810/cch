@@ -40,16 +40,24 @@ when the clock might beat us.
 | **2 — Approval loop** | ✅ done | 12:55 | Suspend-not-deny, audit, human-in-loop, Supabase depth |
 | **3b — Access graph** | 🔄 building | ~13:45 | Reopened 12:52 — see below |
 
-### Verified at 12:55 — `scripts/verify-demo.ts`, all three green
+### Verified at 13:20 — `scripts/verify-demo.ts`, all three green
 
-| Scenario | Decision | Score |
+| Scenario | Decision | Score (3 runs) |
 | --- | --- | --- |
-| A — Alice → Customer Export Schema, 10:15 | `ALLOW` | 12 |
-| **N — Daniel → Acquisition Valuation.xlsx, 23:20** | **`ALLOW`** | **8** |
-| **C — Provenance AI (Alice) → same file, 23:40** | **`REQUIRE_APPROVAL`** | **92** |
+| A — Alice → Customer Export Schema, 10:15 | `ALLOW` | 4, 4, 4 |
+| **N — Daniel → Acquisition Valuation.xlsx, 23:20** | **`ALLOW`** | **18, 22, 18** |
+| **C — Provenance AI (Alice) → same file, 23:40** | **`REQUIRE_APPROVAL`** | **92, 92, 92** |
 
-**N and C are the same restricted file twenty minutes apart, and they land 8 vs
+**N and C are the same restricted file twenty minutes apart, and they land 18 vs
 92.** That is the product argument, reproducible from a script.
+
+An earlier run of this table recorded 12 / 8 / 92 at 12:55. **That was the
+verifier's bug, not a regression here** — it built `occurred_at` with
+`toISOString()`, normalising to UTC, so it scored every scenario an hour earlier
+than the demo performs. Fixed at 13:20; see [handoff.md](handoff.md) §4. The
+bands never moved. N is slightly narrower now and more honest: Daniel's genuine
+23:20 access takes a modest off-hours bump instead of none, which demonstrates
+the hour is a weak signal that does not dominate the verdict.
 
 Confirmed live, not asserted: `x-risk-provider: runware` (real model, not the
 fallback); `occurred_at` echoed as `+01:00` rather than normalised to `Z`;

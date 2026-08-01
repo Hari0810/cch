@@ -45,9 +45,11 @@ Three consecutive runs of `node --experimental-strip-types scripts/verify-demo.t
 | N | Daniel → Acquisition Valuation.xlsx, 23:20 | `ALLOW` | 18, 22, 18 |
 | C | Provenance AI (Alice) → same file, 23:40 | `REQUIRE_APPROVAL` | 92, 92, 92 |
 
-**These are not the numbers the README and older docs quote (A 12 / N 8 / C 92).
+**These are not the numbers the README and older docs quoted (A 12 / N 8 / C 92).
 They changed at 13:20 and the change is a correction, not a regression** — see §4.
-Anything still quoting 8 vs 92 needs updating before submission.
+[README.md](../README.md) and [plan.md](plan.md) were updated at 13:45; the
+illustrative `risk_score: 88` in [brief-extended.md](brief-extended.md) §4 is a
+shape example, not a recorded run, and is left alone.
 
 **N versus C remains the argument**: the same restricted file, twenty minutes
 apart, 18–22 against 92. Slightly narrower than the old 8-vs-92 and more honest —
@@ -137,9 +139,12 @@ read from the database; baselines `source: "modal"`, 11 profiles; `POST
    `components/attack-graph/access-graph.tsx` as a syntax error that broke the
    dev-server compile; `tsc` is clean as of 13:24 but the component has **not
    been visually confirmed by this session**. Do not assume it renders.
-2. **Update the quoted scores.** [README.md](../README.md) and any doc saying
-   "8 versus 92" is now stale. The bands are unchanged; the numbers are not.
-3. **Rehearse.** Out loud, on the real machine, twice.
+2. ~~**Update the quoted scores.**~~ Done 13:45 — [README.md](../README.md) and
+   [plan.md](plan.md) now carry 4 / 18–22 / 92, and both state why N moved.
+   [threat-model.md](threat-model.md) §5 no longer claims the scorer hang is
+   unhandled; the 12s abort shipped in `823d24a`.
+3. **Rehearse.** Out loud, on the real machine, twice. Q&A prep for the grilling
+   is in [qa-prep.md](qa-prep.md) — 84 questions, answered against the code.
 4. **Submission artefact**, 15:15–15:45.
 
 ### Known and unfixed
