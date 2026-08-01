@@ -167,12 +167,24 @@ Not a replacement for IAM — a layer in front of it.
 | UEBA (Exabeam) | Detects after the fact. The file already left. |
 | DLP | Content-aware, purpose-blind. |
 | Conditional Access (Entra, Google CAA) | Real-time signals — device, location, session risk — but **no notion of what you are currently working on**. |
+| Contextual authorisation (SGNL) | **The closest thing to this.** Joins live business systems to the request, sub-100ms. Answers allow-or-deny against a policy someone authored. |
 
-Conditional-access platforms already do runtime enforcement, and do it well. The
-distinction is narrower and more honest than "nobody does this": **work-purpose
-context evaluated at the individual resource action**. Nothing on the market
-joins project membership and open tasks to a specific read at the moment it
-happens.
+The honest positioning is narrower than "nobody does this", because somebody
+does. [SGNL](https://sgnl.ai/) evaluates access against live Jira, Workday and
+ServiceNow data in under 100ms; conditional-access platforms do runtime
+enforcement well; Veza owns the authorisation graph. Three things are still ours:
+
+- **No policy to author.** Every one of those systems needs a human to write the
+  rule first. You cannot write a rule for *"there is no reason for you to be
+  here"* — it is an open-ended negative over work that does not exist. Cordyceps
+  infers the absence of a business purpose rather than encoding an anticipated
+  one. Rules catch what was foreseen; the absent join catches what wasn't.
+- **Suspend, not deny.** Those platforms return a verdict to a control point.
+  Cordyceps holds one read in flight, routes it to the project owner, escalates
+  up the org chart on expiry, and releases through a single-use capability.
+- **The explanation is the deliverable.** A verdict tells you the answer. Two
+  sentences addressed to the person affected — with the grant provenance
+  attached — is what makes the answer contestable.
 
 ## Honest limitations
 

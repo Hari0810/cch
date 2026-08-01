@@ -1,4 +1,4 @@
-# Q&A prep — 84 questions
+# Q&A prep — 85 questions
 
 **Written 2026-08-01 13:35 BST.** Answers are grounded in the build as it stands
 at commit `1531b20`, not in the pitch. Where the code and the pitch disagree, the
@@ -301,6 +301,26 @@ handles a missing baseline. The access trail needs a retention policy and it doe
 not have one, and today the engine uses a service-role key that bypasses
 row-level security entirely. That is integration and hardening work I'd rather
 name than gloss.
+
+**34a — Isn't this SGNL? / Somebody already does contextual authorisation.**
+SGNL is the closest thing to us and I'd rather name it than be caught not
+knowing it. They evaluate access against live Jira, Workday and ServiceNow data
+in under 100ms, and they do it in production with real integrations. The
+difference is that SGNL answers allow-or-deny against **a policy somebody
+authored**. You cannot author a rule for "there is no reason for you to be here"
+— it's an open-ended negative over work that doesn't exist. We infer that from
+an absent join instead of encoding it. And where they return a verdict to a
+control point, we suspend one read in flight and put a named human on it.
+
+*If pushed on latency:* they're right, sub-100ms beats our ~3 seconds and most
+of ours is the model writing the explanation. That's the trade — a verdict is
+fast, a contestable verdict is not. Monitor mode has no latency budget at all
+(see 32), and that's the first deployment anyway.
+
+*If pushed on the category being crowded:* good. IndyKite is doing intent-based
+access for agent delegation chains, Apono ships an Agent Privilege Guard, Veza
+owns the authorisation graph. A category with funded companies in it is a market,
+not a red flag. Our wedge inside it is the absent join and the human release.
 
 ---
 
