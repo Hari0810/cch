@@ -12,7 +12,15 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, Clock, Inbox, ShieldAlert, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Eye,
+  EyeOff,
+  Inbox,
+  ShieldAlert,
+  XCircle,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,6 +55,9 @@ function localTime(iso: string): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+const BUTTON =
+  "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
 
 const STATUS_TONE: Record<PendingApproval["status"], string> = {
   pending: "border-destructive/30 bg-destructive/10 text-destructive",
@@ -156,6 +167,22 @@ export function ApprovalInbox({ className }: { className?: string }) {
   const [items, setItems] = useState<PendingApproval[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  /**
+   * Ids present when "Clear" was pressed. A rehearsal leaves settled rows in
+   * the inbox, and on stage they read as clutter above the one request the
+   * audience is meant to watch arrive.
+   *
+   * IT HIDES; IT DOES NOT DELETE. Nothing is sent to the server and no
+   * `approval_request` row is touched — this is a client-side filter over what
+   * the poll already returned, and "Show all" puts them straight back. An audit
+   * surface with a working delete button is not an audit surface, and a judge
+   * asking "so you can erase these?" deserves the answer no.
+   *
+   * Snapshotting ids rather than comparing a timestamp is deliberate:
+   * `occurred_at` is the scenario's asserted time (23:40 on a machine reading
+   * 14:50), so a wall-clock comparison against it hides the wrong things.
+   */
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
@@ -216,7 +243,9 @@ export function ApprovalInbox({ className }: { className?: string }) {
     }
   }
 
-  const pendingCount = items.filter((i) => i.status === "pending").length;
+  const visible = items.filter((i) => !hiddenIds.has(i.approval_request_id));
+  const hiddenCount = items.length - visible.length;
+  const pendingCount = visible.filter((i) => i.status === "pending").length;
 
   return (
     <section
@@ -233,6 +262,35 @@ export function ApprovalInbox({ className }: { className?: string }) {
             {pendingCount} pending
           </span>
         )}
+        {/* One control, never two competing for a 19rem header: "Clear" while
+            there is something to clear, "Show all" once the view is empty and
+            something is hidden behind it. */}
+        {visible.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => {
+              setHiddenIds(new Set(items.map((i) => i.approval_request_id)));
+              setNote(null);
+            }}
+            title="Hides what is already here. Nothing is deleted — the rows stay in the audit table."
+            className={cn(BUTTON, pendingCount > 0 ? "" : "ml-auto")}
+          >
+            <EyeOff className="mr-1 inline size-3" />
+            Clear
+          </button>
+        ) : (
+          hiddenCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setHiddenIds(new Set())}
+              title="Nothing was deleted — bring the earlier requests back into view."
+              className={cn(BUTTON, "ml-auto")}
+            >
+              <Eye className="mr-1 inline size-3" />
+              Show all
+            </button>
+          )
+        )}
       </header>
 
       {note && (
@@ -242,14 +300,14 @@ export function ApprovalInbox({ className }: { className?: string }) {
       )}
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
-        {items.length === 0 ? (
+        {visible.length === 0 ? (
           <p className="px-1 py-6 text-center text-xs leading-relaxed text-muted-foreground">
             Empty. A suspended access lands here with a named approver — nothing
             is denied outright.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {items.map((item) => (
+            {visible.map((item) => (
               <Row
                 key={item.approval_request_id}
                 item={item}
