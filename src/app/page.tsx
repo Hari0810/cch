@@ -5,11 +5,17 @@ import { useState } from "react";
 import { ApprovalInbox } from "@/components/approval-inbox";
 import { AccessGraphView } from "@/components/attack-graph/access-graph";
 import { DecisionCard } from "@/components/decision-card";
+import { OrganisationView } from "@/components/organisation/organisation-view";
 import { RequestPanel } from "@/components/request-panel";
 import { cn } from "@/lib/utils";
 import type { AccessDecision, AccessRequest } from "@/lib/types";
 
-const TABS = ["Dashboard", "Employees", "Attack"] as const;
+/**
+ * "Organisation", not "Employees". The tab is a system of record — projects,
+ * groups, grants, third-party apps — and naming it after the people table would
+ * promise a directory and deliver an audit surface.
+ */
+const TABS = ["Dashboard", "Organisation", "Attack"] as const;
 
 type Tab = (typeof TABS)[number];
 
@@ -133,9 +139,10 @@ export default function Home() {
              no engine call of its own. */
           <AccessGraphView decision={decision} />
         ) : (
-          <div className="flex flex-1 items-center justify-center p-8">
-            <p className="text-sm text-muted-foreground">Coming soon</p>
-          </div>
+          /* Where a sceptic checks that the decisions fall out of real rows
+             rather than three if-statements. Read-only: it displays, it never
+             decides. */
+          <OrganisationView />
         )}
       </main>
     </div>
