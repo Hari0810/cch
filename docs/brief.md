@@ -142,14 +142,14 @@ You do not need to force every sponsor into the project. A coherent Supabase + M
 
 Product name and pitch
 
-Possible names: ContextGate, Purpose, AccessLens, Mandate, or WhyAccess.
+Possible names: Cordyceps, Purpose, AccessLens, Mandate, or WhyAccess.
 
 One-line pitch:
 
-ContextGate prevents insider threats by checking not only whether an employee can access sensitive data, but whether they should be accessing it for their current work.
+Cordyceps prevents insider threats by checking not only whether an employee can access sensitive data, but whether they should be accessing it for their current work.
 
 Or, more dramatic:
 
-Your permissions say what you can access. ContextGate understands what you should access right now.
+Your permissions say what you can access. Cordyceps understands what you should access right now.
 
 Overall, this is technically strong enough—but only if you narrow it from “build an ERP with cybersecurity features” to build a contextual authorisation agent with a minimal organisational-context dashboard. That narrower version is more novel, more demoable, and much more aligned with the hackathon.

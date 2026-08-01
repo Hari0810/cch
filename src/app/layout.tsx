@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ContextGate",
+  title: "Cordyceps",
   description:
     "Context-aware access control: not just whether you can access this, but whether you should right now.",
 };
