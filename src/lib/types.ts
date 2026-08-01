@@ -245,6 +245,67 @@ export const THRESHOLDS = [
 
 export const APPROVAL_EXPIRY_MINUTES = 15;
 
+// ------------------------------------------------------------------ graph
+
+/**
+ * The access graph — rung 3b, scaffolded in docs/attack-graph.md.
+ *
+ * THE GRAPH EXPLAINS; IT DOES NOT DETECT. Every node and edge here is either a
+ * fact the engine already computed or a deterministic count queried from the
+ * database. Nothing on it may feed a score. The test: delete the graph and every
+ * decision is byte-identical.
+ */
+export interface GraphNode {
+  id: string;
+  kind: "identity" | "oauth_app" | "group" | "folder" | "resource" | "project";
+  label: string;
+  sublabel: string | null;
+  sensitivity: Sensitivity | null;
+  /** The resource the request actually targeted. Exactly one, or none. */
+  focus: boolean;
+}
+
+export interface GraphEdge {
+  id: string;
+  from: string;
+  to: string;
+  /**
+   * `absent` is the load-bearing one and the reason this is a graph rather than
+   * a list: it draws the relationship that ISN'T there — Alice to the project
+   * she is not a member of. A chain can only render the path that exists; the
+   * product's whole argument is about the one that doesn't.
+   */
+  kind: "acts_for" | "member_of" | "grant" | "contains" | "owns" | "absent";
+  label: string | null;
+}
+
+export interface AccessGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  /**
+   * Everything the permitting grant reaches, not just what was asked for. Walks
+   * `resource.parent_id` downward — the mirror of the upward walk the engine
+   * already does to find inherited grants.
+   */
+  blast_radius: {
+    granted_on: string;
+    granted_reason: string | null;
+    last_reviewed_at: string | null;
+    reaches: Array<{ id: string; name: string; sensitivity: Sensitivity }>;
+    restricted_count: number;
+  } | null;
+  /**
+   * Where group membership and project membership have silently diverged. This
+   * is the vulnerability class stated as a set difference.
+   */
+  divergence: {
+    group_name: string;
+    project_name: string;
+    in_group_not_project: string[];
+    in_project_not_group: string[];
+  } | null;
+}
+
 // ------------------------------------------------------- approval contract
 
 /**
