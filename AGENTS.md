@@ -119,6 +119,7 @@ Two constraints, both already commented in the file and both easy to break:
 | --- | --- |
 | [docs/handoff.md](docs/handoff.md) | **Start here if you are picking this up** — timestamped state, what is verified, what remains |
 | [docs/attack-graph.md](docs/attack-graph.md) | **Rung 3b scaffold** — the picture, the feasibility tiers, and what must never be implied |
+| [docs/workspace-enforcement.md](docs/workspace-enforcement.md) | **Proposal, undecided** — employee file surface and server-side withholding, costed against the 15:45 freeze |
 | [docs/plan.md](docs/plan.md) | **The live build plan** — rungs, time budget, cut line at 14:45 |
 | [docs/demo-scenario.md](docs/demo-scenario.md) | **Source of truth for the seed** — cast, permissions, resources, tasks, scenarios |
 | [docs/brief-extended.md](docs/brief-extended.md) | The product argued out in full — the gap, the pipeline, thresholds |
