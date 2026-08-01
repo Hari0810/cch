@@ -42,13 +42,16 @@ async function lookup(table: string, name: string): Promise<string> {
   return rows[0].id;
 }
 
-/** Today at a given local time, as ISO. Mirrors how the UI builds occurred_at. */
-function todayAt(hhmm: string): string {
-  const [h, m] = hhmm.split(":").map(Number);
-  const d = new Date();
-  d.setHours(h, m, 0, 0);
-  return d.toISOString();
-}
+/**
+ * The SAME function the UI calls — imported, not reimplemented.
+ *
+ * This used to be a local copy ending in `.toISOString()`, which normalises to
+ * UTC. Under BST that sent `09:15Z` where the UI sends `10:15+01:00`, so the
+ * script was checking an access an hour earlier than the demo performs, outside
+ * Alice's 10:04 baseline start. A verifier that does not send what the demo
+ * sends is not verifying the demo.
+ */
+import { occurredAt as todayAt } from "../src/lib/occurred-at.ts";
 
 interface Case {
   label: string;

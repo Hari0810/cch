@@ -57,23 +57,13 @@ export const RESOURCES = [
 const ACTIONS: Action[] = ["view", "download", "edit", "delete"];
 
 /**
- * `occurred_at` is always explicit — never the wall clock. AGENTS.md rule 1:
- * we demo at ~16:35, inside Alice's baseline, so reading now() would silently
- * zero the off-hours signal on stage.
+ * Re-exported so existing importers keep working. The implementation moved to
+ * src/lib/occurred-at.ts so `scripts/verify-demo.ts` can share it — it had its
+ * own copy that normalised to UTC, and the two disagreed by an hour. Read the
+ * comment there before changing anything about timestamps.
  */
-export function occurredAt(hhmm: string, base: Date = new Date()): string {
-  const [h, m] = hhmm.split(":").map(Number);
-  const d = new Date(base);
-  d.setHours(h ?? 0, m ?? 0, 0, 0);
-  const pad = (n: number) => String(Math.trunc(Math.abs(n))).padStart(2, "0");
-  const offset = -d.getTimezoneOffset();
-  const sign = offset >= 0 ? "+" : "-";
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
-    `T${pad(d.getHours())}:${pad(d.getMinutes())}:00` +
-    `${sign}${pad(offset / 60)}:${pad(offset % 60)}`
-  );
-}
+import { occurredAt } from "@/lib/occurred-at";
+export { occurredAt };
 
 type Scenario = {
   key: "A" | "N" | "C";

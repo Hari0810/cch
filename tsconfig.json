@@ -11,6 +11,11 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // scripts/verify-demo.ts runs under `node --experimental-strip-types`, which
+    // requires the literal `.ts` extension on relative imports. Next's bundler
+    // resolution forbids it by default, so both toolchains only agree with this
+    // on. It affects nothing the bundler compiles.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
