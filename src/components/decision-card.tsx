@@ -22,6 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FilePreview } from "@/components/file-preview";
 import { cn } from "@/lib/utils";
 import type { AccessDecision, PermissionHop, PolicyOutcome } from "@/lib/types";
 
@@ -579,7 +580,16 @@ export function DecisionCard({
       {/* Keyed so a new decision remounts the countdown rather than inheriting
           the previous request's deadline. */}
       <SuspendedRow key={decision.access_event_id} decision={decision} />
-      <RawPanel decision={decision} />
+
+      {/* The file itself lives in a dialog, not inline: this card has to keep
+          request, score, reasons and the approval action legible together
+          without scrolling. A trigger on the existing footer row costs no
+          vertical space. Keyed so a new decision opens a fresh preview rather
+          than inheriting the previous request's released bytes. */}
+      <div className="flex shrink-0 items-start justify-between gap-3">
+        <RawPanel decision={decision} />
+        <FilePreview key={decision.access_event_id} decision={decision} />
+      </div>
     </Shell>
   );
 }
